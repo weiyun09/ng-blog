@@ -47,7 +47,7 @@
     <ng-template #footer>
       <div class="drawer-foot">
         <p-button label="關閉" severity="secondary" [outlined]="true" (onClick)="close.emit()" />
-        <p-button label="編輯" icon="pi pi-pencil" [routerLink]="['/articles', a.id, 'edit']" />
+        <p-button label="編輯" [routerLink]="['/articles', a.id, 'edit']" />
       </div>
     </ng-template>
   }
