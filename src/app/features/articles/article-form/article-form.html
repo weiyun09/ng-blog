@@ -59,17 +59,62 @@
         <!-- 右欄：發佈設定 -->
         <aside class="form-col-side">
           <div class="field-block">
+            <label class="field-label" for="publishAt">上架時間</label>
+            <p-datepicker
+              inputId="publishAt"
+              formControlName="publishAt"
+              [showTime]="true"
+              hourFormat="24"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              [placeholder]="statusValue() === 'draft' ? '草稿無需上架時間' : '留空＝立即上架'"
+              [disabled]="statusValue() === 'draft'"
+              styleClass="w-full"
+            />
+            @if (statusValue() !== 'draft') {
+              <p class="status-hint">選未來時間＝排程上架；留空或過去時間＝立即發佈</p>
+            }
+          </div>
+
+          <div class="field-block">
             <label class="field-label">發佈狀態</label>
             <div class="radio-group">
               <div class="radio-item">
-                <p-radiobutton inputId="status-draft" value="draft" formControlName="status" />
-                <label for="status-draft">草稿</label>
+                <p-radiobutton
+                  inputId="status-draft"
+                  value="draft"
+                  formControlName="status"
+                  [disabled]="draftLocked()"
+                />
+                <label for="status-draft" [class.label-disabled]="draftLocked()">草稿</label>
               </div>
               <div class="radio-item">
-                <p-radiobutton inputId="status-published" value="published" formControlName="status" />
-                <label for="status-published">已發佈</label>
+                <p-radiobutton
+                  inputId="status-scheduled"
+                  value="scheduled"
+                  formControlName="status"
+                  [disabled]="draftLocked()"
+                />
+                <label for="status-scheduled" [class.label-disabled]="draftLocked()">待上架</label>
               </div>
+              <!-- 已發佈/下架只在編輯這類文章時顯示，讓使用者看得到目前狀態；但全部禁用不可改 -->
+              @if (draftLocked()) {
+                <div class="radio-item">
+                  <p-radiobutton
+                    [inputId]="'status-' + originalStatus()"
+                    [value]="originalStatus()"
+                    formControlName="status"
+                    [disabled]="true"
+                  />
+                  <label [for]="'status-' + originalStatus()" class="label-disabled">
+                    {{ STATUS_META[originalStatus()].label }}
+                  </label>
+                </div>
+              }
             </div>
+            @if (draftLocked()) {
+              <p class="status-hint">狀態已定，無法改回草稿或待上架；下架請至列表操作</p>
+            }
           </div>
 
           <div class="field-block">

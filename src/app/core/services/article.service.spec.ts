@@ -95,10 +95,14 @@ describe('ArticleService', () => {
   });
 
   describe('summaryOf()', () => {
-    it('全部（空區間）：total=230，發布+草稿=total，publishedRate 一致', () => {
+    it('全部（空區間）：total=230，發布/草稿數皆 > 0 且不超過 total，publishedRate 一致', () => {
       const s = service.summaryOf('', '');
       expect(s.total).toBe(230);
-      expect(s.published + s.draft).toBe(s.total);
+      // 狀態擴充為 draft/scheduled/published/archived，summary 僅計 published 與 draft，
+      // 故兩者相加不再等於 total，但各自應 > 0 且合計 ≤ total
+      expect(s.published).toBeGreaterThan(0);
+      expect(s.draft).toBeGreaterThan(0);
+      expect(s.published + s.draft).toBeLessThanOrEqual(s.total);
       expect(s.publishedRate).toBeCloseTo(s.published / s.total);
     });
 

@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { Article } from '../../../core/models/article.model';
+import { Article, STATUS_META } from '../../../core/models/article.model';
 
 @Component({
   selector: 'app-article-detail-drawer',
@@ -15,6 +15,8 @@ import { Article } from '../../../core/models/article.model';
 export class ArticleDetailDrawer {
   readonly article = input<Article | null>(null);
   readonly close = output<void>();
+
+  readonly STATUS_META = STATUS_META;
 
   formatDateTime(iso: string): string {
     const d = new Date(iso);

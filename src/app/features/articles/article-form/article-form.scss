@@ -79,6 +79,11 @@
   height: clamp(240px, calc(100vh - 460px), 560px);
   overflow-y: auto;
 }
+/* focus 後就隱藏 placeholder：避免 IME 組字期間 Quill 尚未移除 .ql-blank，
+   導致組字中的字與 placeholder「輸入文章內容」重疊 */
+.field-content ::ng-deep .ql-editor.ql-blank:focus::before {
+  content: '';
+}
 /* 右欄：發佈設定 */
 .form-col-side {
   display: flex;
@@ -231,6 +236,16 @@
 .radio-item label {
   font-size: 14px;
   cursor: pointer;
+}
+.radio-item label.label-disabled {
+  color: var(--c-text-muted);
+  cursor: not-allowed;
+}
+/* 已發佈不可退回草稿的提示小字 */
+.status-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--c-text-muted);
 }
 
 /* 按鈕列固定在卡片底部（不隨表單區捲動）*/

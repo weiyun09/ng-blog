@@ -5,12 +5,13 @@ import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { QuillEditorComponent } from 'ngx-quill';
 import { MessageService } from 'primeng/api';
 import { ArticleService } from '../../../core/services/article.service';
-import { ArticleDraft, ArticleStatus } from '../../../core/models/article.model';
+import { ArticleDraft, ArticleStatus, STATUS_META } from '../../../core/models/article.model';
 
 // 新增與編輯共用此元件，依路由是否帶 :id 區分模式。
 @Component({
@@ -23,6 +24,7 @@ import { ArticleDraft, ArticleStatus } from '../../../core/models/article.model'
     InputTextModule,
     AutoCompleteModule,
     RadioButtonModule,
+    DatePickerModule,
     ButtonModule,
     ProgressSpinnerModule,
     QuillEditorComponent,
@@ -54,15 +56,30 @@ export class ArticleForm {
   readonly submitting = signal(false);
   readonly notFound = signal(false);
 
+  // 載入時的原始狀態；一旦文章曾發佈（published/archived），狀態就鎖定不可改回未發佈
+  // （草稿、待上架仍可自由切換與編輯）
+  readonly originalStatus = signal<ArticleStatus>('draft');
+  readonly draftLocked = computed(
+    () => this.originalStatus() === 'published' || this.originalStatus() === 'archived',
+  );
+
+  readonly STATUS_META = STATUS_META;
+
+  // 目前選的發佈狀態（供模板控制上架時間欄的停用）
+  readonly statusValue = signal<ArticleStatus>('draft');
+
   readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(80)]],
     content: ['', [Validators.required]],
     tags: this.fb.nonNullable.control<string[]>([]),
     status: this.fb.nonNullable.control<ArticleStatus>('draft'),
+    // 上架時間：待上架必填未來時間；已發佈選填（留空＝立即）
+    publishAt: this.fb.control<Date | null>(null),
   });
 
   constructor() {
     this.articleService.getAllTags().subscribe((tags) => this.allTags.set(tags));
+    this.form.controls.status.valueChanges.subscribe((v) => this.statusValue.set(v));
 
     // 表單 tags 變動時同步到 selectedTags signal（供 quickTags 排除）
     this.form.controls.tags.valueChanges.subscribe((v) => this.selectedTags.set(v ?? []));
@@ -108,11 +125,14 @@ export class ArticleForm {
         this.notFound.set(true);
         return;
       }
+      this.originalStatus.set(article.status);
+      this.statusValue.set(article.status);
       this.form.patchValue({
         title: article.title,
         content: article.content,
         tags: [...article.tags],
         status: article.status,
+        publishAt: article.publishedAt ? new Date(article.publishedAt) : null,
       });
     });
   }
@@ -122,8 +142,17 @@ export class ArticleForm {
       this.form.markAllAsTouched();
       return;
     }
+    const v = this.form.getRawValue();
     this.submitting.set(true);
-    const draft = this.form.getRawValue() as ArticleDraft;
+    const draft: ArticleDraft = {
+      title: v.title,
+      content: v.content,
+      tags: v.tags,
+      status: v.status,
+      // 草稿不帶上架時間；其餘帶使用者指定的時間。
+      // 留空＝立即上架（service 補現在）；填未來＝排程；status 最終由 service 依時間校正。
+      publishedAt: v.status !== 'draft' && v.publishAt ? v.publishAt.toISOString() : undefined,
+    };
 
     const id = this.editingId();
     const req$ = id !== null

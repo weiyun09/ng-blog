@@ -107,47 +107,57 @@
 .col-status {
   white-space: nowrap;
 }
-.col-info {
-  width: 60px;
-  text-align: center;
+/* 建立/編輯欄：上排 email、下排時間，小字堆疊 */
+.col-meta {
+  white-space: nowrap;
 }
-.info-icon {
-  font-size: 16px;
+/* 表頭也上下兩排，對應內容的「人 / 時間」兩排 */
+.th-stack {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+.th-stack span:last-child {
+  font-size: 12px;
+  font-weight: 400;
   color: var(--c-text-muted);
-  cursor: pointer;
-  transition: color 0.15s;
 }
-.info-icon:hover {
+.meta-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+}
+.meta-user {
+  font-size: 13px;
+  color: var(--c-text);
+}
+.meta-time {
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+.col-date {
+  white-space: nowrap;
+  font-size: 15px;
+}
+/* 上架/下架時間同欄上下兩排 */
+.stack-time {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+}
+.time-empty {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  opacity: 0.6;
+}
+/* 待上架的上架時間標成藍色（未來排程），與狀態欄的「待上架」tag 呼應 */
+.time-scheduled {
   color: var(--c-primary);
 }
 .col-actions {
-  text-align: right;
+  text-align: left;
   white-space: nowrap;
   width: 110px;
-}
-
-/* 詳細資訊 popover 內容：icon｜欄名｜值 三欄對齊 */
-.info-pop {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 8px 10px;
-  align-items: center;
-  font-size: 13px;
-  min-width: 240px;
-}
-.info-line {
-  display: contents;
-}
-.info-line i {
-  color: var(--c-text-muted);
-}
-.info-k {
-  color: var(--c-text-muted);
-  white-space: nowrap;
-}
-.info-v {
-  color: var(--c-text);
-  font-weight: 500;
 }
 .row-clickable {
   cursor: pointer;

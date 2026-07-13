@@ -3,7 +3,8 @@ import { RouterLink, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { ButtonModule } from 'primeng/button';
@@ -12,10 +13,10 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { PopoverModule } from 'primeng/popover';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { ArticleService } from '../../../core/services/article.service';
-import { Article, ArticleStatus } from '../../../core/models/article.model';
+import { Article, ArticleStatus, STATUS_META } from '../../../core/models/article.model';
 import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 import { ArticleDetailDrawer } from '../article-detail-drawer/article-detail-drawer';
 import { sortDateRange, toDateStr } from '../../../shared/utils/date-range';
@@ -44,7 +45,7 @@ interface AppliedFilter {
     DatePickerModule,
     TagModule,
     ProgressSpinnerModule,
-    PopoverModule,
+    TooltipModule,
     ConfirmDialog,
     ArticleDetailDrawer,
     ReverseRange,
@@ -63,10 +64,15 @@ export class ArticleList {
   // 建立期間不允許選未來日期（文章不可能建立在未來）
   readonly maxDate = new Date();
 
+  // 狀態顯示對照，模板直接引用
+  readonly STATUS_META = STATUS_META;
+
   readonly statusOptions = [
     { label: '全部', value: 'all' },
-    { label: '已發佈', value: 'published' },
     { label: '草稿', value: 'draft' },
+    { label: '待上架', value: 'scheduled' },
+    { label: '已發佈', value: 'published' },
+    { label: '下架', value: 'archived' },
   ];
 
   // 查詢條件表單（PrimeNG datepicker range 模式綁 Date[]）
@@ -88,8 +94,7 @@ export class ArticleList {
 
   readonly detail = signal<Article | null>(null);
   readonly pendingDelete = signal<Article | null>(null);
-  // 目前 hover 到的列，供「詳細資訊」popover 顯示作者/編輯者/時間
-  readonly infoRow = signal<Article | null>(null);
+  readonly pendingArchive = signal<Article | null>(null);
 
   constructor() {
     const query$ = combineLatest([
@@ -117,6 +122,15 @@ export class ArticleList {
     );
 
     toSignal(query$, { initialValue: null });
+
+    // 標題搜尋：即時輸入 + debounce（PDF 指定的 RxJS debounce）。
+    // 打字停 400ms 才查詢，避免每個字元都打一次 API；狀態/日期仍走「查詢」按鈕。
+    this.filterForm.controls.keyword.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe((keyword) => {
+        this.page.set(1);
+        this.applied.update((prev) => ({ ...prev, keyword: keyword.trim() }));
+      });
   }
 
   applyFilter(): void {
@@ -160,6 +174,8 @@ export class ArticleList {
 
   askDelete(article: Article, event: Event): void {
     event.stopPropagation();
+    // 僅草稿可刪除（非草稿的文章已對外，不允許直接刪）
+    if (article.status !== 'draft') return;
     this.pendingDelete.set(article);
   }
   cancelDelete(): void {
@@ -181,6 +197,30 @@ export class ArticleList {
       } else {
         this.refresh.update((n) => n + 1);
       }
+    });
+  }
+
+  askArchive(article: Article, event: Event): void {
+    event.stopPropagation();
+    // 已發佈或待上架皆可下架
+    if (article.status !== 'published' && article.status !== 'scheduled') return;
+    this.pendingArchive.set(article);
+  }
+  cancelArchive(): void {
+    this.pendingArchive.set(null);
+  }
+  confirmArchive(): void {
+    const target = this.pendingArchive();
+    if (!target) return;
+    this.articleService.archive(target.id).subscribe(() => {
+      this.pendingArchive.set(null);
+      this.messageService.add({
+        severity: 'success',
+        summary: '下架成功',
+        detail: `文章「${target.title}」已下架`,
+        life: 3000,
+      });
+      this.refresh.update((n) => n + 1);
     });
   }
 

@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { Article, ArticleDraft, ArticleQuery, Paged, ArticleSummary, TagStat } from '../models/article.model';
+import { Article, ArticleDraft, ArticleQuery, ArticleStatus, Paged, ArticleSummary, TagStat } from '../models/article.model';
 
 /**
  * 讀寫方法刻意回傳 Observable 並加 delay()，模擬 API 延遲，
@@ -42,7 +42,7 @@ export class ArticleService {
   private computeSummary(list: Article[]): ArticleSummary {
     const total = list.length;
     const published = list.filter((a) => a.status === 'published').length;
-    const draft = total - published;
+    const draft = list.filter((a) => a.status === 'draft').length;
 
     const tagCount = new Map<string, number>();
     for (const a of list) {
@@ -68,7 +68,23 @@ export class ArticleService {
     };
   }
 
+  // 即時判定：把上架時間已到的「待上架」升級為「已發佈」。
+  // 在每次讀取（query/getById）前呼叫，取代排程定時器——看到的永遠是最新狀態。
+  private promoteScheduled(): void {
+    const now = new Date().toISOString();
+    let changed = false;
+    const next = this.articles().map((a) => {
+      if (a.status === 'scheduled' && a.publishedAt && a.publishedAt <= now) {
+        changed = true;
+        return { ...a, status: 'published' as ArticleStatus };
+      }
+      return a;
+    });
+    if (changed) this.articles.set(next);
+  }
+
   query(q: ArticleQuery): Observable<Paged<Article>> {
+    this.promoteScheduled();
     const kw = q.keyword?.trim().toLowerCase() ?? '';
     let list = this.articles();
 
@@ -76,6 +92,9 @@ export class ArticleService {
     if (q.status && q.status !== 'all') list = list.filter((a) => a.status === q.status);
     if (q.dateFrom) list = list.filter((a) => a.createdAt.slice(0, 10) >= q.dateFrom!);
     if (q.dateTo) list = list.filter((a) => a.createdAt.slice(0, 10) <= q.dateTo!);
+
+    // 依編輯時間倒序：最近編輯（含剛新增）的排最前面
+    list = [...list].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 
     const total = list.length;
     const start = (q.page - 1) * q.pageSize;
@@ -87,6 +106,7 @@ export class ArticleService {
   }
 
   getById(id: number): Observable<Article | undefined> {
+    this.promoteScheduled();
     const found = this.articles().find((a) => a.id === id);
     return of(found).pipe(delay(this.LATENCY));
   }
@@ -103,15 +123,37 @@ export class ArticleService {
   // 目前操作者（無真實登入後端，先固定；未來可改為讀 AuthService.email）
   private readonly CURRENT_USER = 'hina@gmail.com';
 
+  /**
+   * 依表單送出的 draft 判定發佈相關欄位。
+   * - 草稿：清掉發佈時間。
+   * - 待上架 / 已發佈：用指定的 publishedAt（已發佈留空則補 now）。
+   *   最終狀態依上架時間校正：時間 > 現在 → scheduled；否則 published。
+   */
+  private resolvePublish(
+    draft: ArticleDraft,
+    now: string,
+    prevPublishedAt?: string,
+  ): { status: ArticleStatus; publishedAt?: string } {
+    if (draft.status === 'draft') {
+      return { status: 'draft', publishedAt: prevPublishedAt };
+    }
+    const publishedAt = draft.publishedAt ?? now;
+    const status: ArticleStatus = publishedAt > now ? 'scheduled' : 'published';
+    return { status, publishedAt };
+  }
+
   create(draft: ArticleDraft): Observable<Article> {
     const now = new Date().toISOString();
+    const { status, publishedAt } = this.resolvePublish(draft, now);
     const article: Article = {
       ...draft,
+      status,
       id: this.nextId++,
       author: this.CURRENT_USER,
       editor: this.CURRENT_USER,
       createdAt: now,
       updatedAt: now,
+      publishedAt,
     };
     this.articles.update((list) => [article, ...list]);
     return of(article).pipe(delay(this.LATENCY));
@@ -122,12 +164,34 @@ export class ArticleService {
     if (!target) {
       return throwError(() => new Error(`找不到文章 id=${id}`));
     }
+    const now = new Date().toISOString();
+    const { status, publishedAt } = this.resolvePublish(draft, now, target.publishedAt);
     // 編輯只更新編輯者與編輯時間，建立者/建立時間保持不變
     const updated: Article = {
       ...target,
       ...draft,
+      status,
       editor: this.CURRENT_USER,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
+      publishedAt,
+    };
+    this.articles.update((list) => list.map((a) => (a.id === id ? updated : a)));
+    return of(updated).pipe(delay(this.LATENCY));
+  }
+
+  // 快速下架：已發佈或待上架（排程未到）的文章可下架，記錄下架時間與操作者
+  archive(id: number): Observable<Article> {
+    const target = this.articles().find((a) => a.id === id);
+    if (!target || (target.status !== 'published' && target.status !== 'scheduled')) {
+      return throwError(() => new Error(`無法下架 id=${id}`));
+    }
+    const now = new Date().toISOString();
+    const updated: Article = {
+      ...target,
+      status: 'archived',
+      editor: this.CURRENT_USER,
+      updatedAt: now,
+      archivedAt: now,
     };
     this.articles.update((list) => list.map((a) => (a.id === id ? updated : a)));
     return of(updated).pipe(delay(this.LATENCY));
@@ -187,15 +251,29 @@ export class ArticleService {
       const author = users[i % users.length];
       // 約每 3 筆有一筆是別人編輯的，其餘編輯者同建立者
       const editor = i % 3 === 1 ? users[(i + 1) % users.length] : author;
+      // 狀態分佈：約 1/3 草稿、少部分待上架、少部分下架、其餘已發佈，四種狀態都有資料
+      const status: ArticleStatus =
+        i % 3 === 0 ? 'draft' : i % 11 === 2 ? 'scheduled' : i % 7 === 1 ? 'archived' : 'published';
+      // 待上架者上架時間設在未來（base + 30 天）；其餘已發佈/下架者發佈時間在建立後數小時
+      const publishedAt =
+        status === 'scheduled'
+          ? new Date(base + day * 30).toISOString()
+          : status !== 'draft'
+            ? new Date(createdAt.getTime() + hour * 3).toISOString()
+            : undefined;
+      const archivedAt =
+        status === 'archived' ? new Date(createdAt.getTime() + day * 2).toISOString() : undefined;
       rows.push({
         title: round === 0 ? (title as string) : `${title}（${round + 1}）`,
         content: content as string,
         tags: tags as string[],
-        status: i % 3 === 0 ? 'draft' : 'published', // 約 1/3 草稿
+        status,
         author,
         editor,
         createdAt: createdAt.toISOString(),
         updatedAt: updatedAt.toISOString(),
+        publishedAt,
+        archivedAt,
       });
     }
 

@@ -6,10 +6,7 @@
 >
   <ng-template #header>
     @if (article(); as a) {
-      <p-tag
-        [value]="a.status === 'published' ? '已發佈' : '草稿'"
-        [severity]="a.status === 'published' ? 'success' : 'warn'"
-      />
+      <p-tag [value]="STATUS_META[a.status].label" [severity]="STATUS_META[a.status].severity" />
     }
   </ng-template>
 
@@ -25,6 +22,16 @@
         <span class="meta-item"><i class="pi pi-pencil"></i> 編輯者：{{ a.editor }}</span>
         <span class="meta-item"><i class="pi pi-clock"></i> 編輯於 {{ formatDateTime(a.updatedAt) }}</span>
       </div>
+      @if (a.publishedAt || a.archivedAt) {
+        <div class="meta-row">
+          @if (a.publishedAt) {
+            <span class="meta-item"><i class="pi pi-send"></i> 上架於 {{ formatDateTime(a.publishedAt) }}</span>
+          }
+          @if (a.archivedAt) {
+            <span class="meta-item"><i class="pi pi-times-circle"></i> 下架於 {{ formatDateTime(a.archivedAt) }}</span>
+          }
+        </div>
+      }
 
       @if (a.tags.length) {
         <div class="drawer-tags">

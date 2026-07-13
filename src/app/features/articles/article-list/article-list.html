@@ -55,9 +55,17 @@
         <th class="col-index">#</th>
         <th>標題</th>
         <th class="col-status">狀態</th>
+        <th class="col-date">
+          <span class="th-stack"><span>上架時間</span><span>下架時間</span></span>
+        </th>
         <th class="col-tags">標籤</th>
-        <th class="col-info">詳細</th>
-        <th class="col-actions"></th>
+        <th class="col-meta">
+          <span class="th-stack"><span>建立者</span><span>建立時間</span></span>
+        </th>
+        <th class="col-meta">
+          <span class="th-stack"><span>編輯者</span><span>編輯時間</span></span>
+        </th>
+        <th class="col-actions">操作</th>
       </tr>
     </ng-template>
     <ng-template #body let-a let-i="rowIndex">
@@ -67,10 +75,21 @@
           <span class="a-title">{{ a.title }}</span>
         </td>
         <td class="col-status">
-          <p-tag
-            [value]="a.status === 'published' ? '已發佈' : '草稿'"
-            [severity]="a.status === 'published' ? 'success' : 'warn'"
-          />
+          <p-tag [value]="STATUS_META[a.status].label" [severity]="STATUS_META[a.status].severity" />
+        </td>
+        <td class="col-date">
+          <div class="stack-time">
+            @if (a.publishedAt) {
+              <span [class.time-scheduled]="a.status === 'scheduled'">{{ formatDateTime(a.publishedAt) }}</span>
+            } @else {
+              <span class="time-empty">-</span>
+            }
+            @if (a.archivedAt) {
+              <span>{{ formatDateTime(a.archivedAt) }}</span>
+            } @else {
+              <span class="time-empty">-</span>
+            }
+          </div>
         </td>
         <td class="col-tags">
           <span class="a-tags">
@@ -79,34 +98,52 @@
             }
           </span>
         </td>
-        <td class="col-info">
-          <i
-            class="pi pi-info-circle info-icon"
-            (mouseenter)="infoRow.set(a); infoPop.show($event)"
-            (mouseleave)="infoPop.hide()"
-            (click)="$event.stopPropagation()"
-          ></i>
+        <td class="col-meta">
+          <div class="meta-cell">
+            <span class="meta-user">{{ a.author }}</span>
+            <span class="meta-time">{{ formatDateTime(a.createdAt) }}</span>
+          </div>
+        </td>
+        <td class="col-meta">
+          <div class="meta-cell">
+            <span class="meta-user">{{ a.editor }}</span>
+            <span class="meta-time">{{ formatDateTime(a.updatedAt) }}</span>
+          </div>
         </td>
         <td class="col-actions">
-          <p-button
-            icon="pi pi-pencil"
-            [text]="true"
-            severity="secondary"
-            (onClick)="editArticle(a, $event)"
-          />
-          <p-button
-            icon="pi pi-trash"
-            [text]="true"
-            severity="danger"
-            (onClick)="askDelete(a, $event)"
-          />
+          @if (a.status !== 'archived') {
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              severity="secondary"
+              (onClick)="editArticle(a, $event)"
+            />
+          }
+          @if (a.status === 'published' || a.status === 'scheduled') {
+            <p-button
+              icon="pi pi-times-circle"
+              [text]="true"
+              severity="secondary"
+              (onClick)="askArchive(a, $event)"
+              pTooltip="下架"
+              tooltipPosition="bottom"
+            />
+          }
+          @if (a.status === 'draft') {
+            <p-button
+              icon="pi pi-trash"
+              [text]="true"
+              severity="danger"
+              (onClick)="askDelete(a, $event)"
+            />
+          }
         </td>
       </tr>
     </ng-template>
     <ng-template #emptymessage>
       @if (!loading()) {
         <tr>
-          <td colspan="6">
+          <td colspan="8">
             <div class="state-box">
               <i class="pi pi-inbox"></i>
               <p>{{ total() === 0 ? '目前沒有符合的文章' : '這一頁沒有資料' }}</p>
@@ -116,18 +153,6 @@
       }
     </ng-template>
   </p-table>
-
-  <!-- 共用「詳細資訊」popover：hover 各列 info icon 時顯示當列的作者/編輯者/時間 -->
-  <p-popover #infoPop [dismissable]="true">
-    @if (infoRow(); as r) {
-      <div class="info-pop">
-        <div class="info-line"><i class="pi pi-user"></i><span class="info-k">建立者</span><span class="info-v">{{ r.author }}</span></div>
-        <div class="info-line"><i class="pi pi-clock"></i><span class="info-k">建立時間</span><span class="info-v">{{ formatDateTime(r.createdAt) }}</span></div>
-        <div class="info-line"><i class="pi pi-pencil"></i><span class="info-k">編輯者</span><span class="info-v">{{ r.editor }}</span></div>
-        <div class="info-line"><i class="pi pi-clock"></i><span class="info-k">編輯時間</span><span class="info-v">{{ formatDateTime(r.updatedAt) }}</span></div>
-      </div>
-    }
-  </p-popover>
 
   @if (loading()) {
     <div class="table-loading">
@@ -155,6 +180,15 @@
   confirmText="刪除"
   (confirm)="confirmDelete()"
   (cancel)="cancelDelete()"
+/>
+
+<app-confirm-dialog
+  [open]="pendingArchive() !== null"
+  title="下架文章"
+  [message]="'確定要下架「' + (pendingArchive()?.title ?? '') + '」嗎？下架後將無法再編輯。'"
+  confirmText="下架"
+  (confirm)="confirmArchive()"
+  (cancel)="cancelArchive()"
 />
 
 <app-article-detail-drawer [article]="detail()" (close)="closeDetail()" />

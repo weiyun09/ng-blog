@@ -2,6 +2,8 @@
 
 文章管理系統（Blog Admin SPA）。以現代 Angular（standalone + signals）搭配 PrimeNG 打造的營運後台，涵蓋登入、文章列表（伺服器端分頁）、新增／編輯、詳情預覽，資料以本地 Service 模擬伺服器行為，無需後端。
 
+🔗 **線上 Demo**：https://ng-blog-admin.vercel.app
+
 ---
 
 ## 🧰 開發框架與工具版本
@@ -9,10 +11,10 @@
 | 項目 | 版本 |
 | --- | --- |
 | Angular | 21（standalone，無 NgModule） |
-| PrimeNG | 21（UI 元件庫，Nora 主題 + 藍色主色） |
+| PrimeNG | 21（UI 元件庫，Aura 主題 + 藍色主色） |
 | TypeScript | 5.9 |
 | Node.js | ≥ 20（開發於 24.16） |
-| 樣式 | SCSS + PrimeNG theming（`@primeng/themes` Nora preset）|
+| 樣式 | SCSS + PrimeNG theming（`@primeng/themes` Aura preset）|
 | 圖示 | PrimeIcons |
 | 建置 | Angular CLI（esbuild / Vite） |
 
@@ -42,10 +44,10 @@ npm test           # 等同 ng test
 
 模擬登入，**無真實後端**。驗證規則：
 
-- **Email**：任何符合格式的 Email（例：`hina@example.com`）
+- **Email**：任何符合格式的 Email（例：`test@example.com`）
 - **密碼**：任意 **6 碼以上**（例：`123456`）
 
-登入狀態存於 `localStorage`（key：`blog-admin.auth`），重整頁面不會被登出；未登入直接進 `/articles` 會被路由守衛導回 `/login`。
+登入狀態存於 `localStorage`（key：`blog-admin.auth`），重整頁面不會被登出；未登入直接進 `/articles` 會被路由導回 `/login`。
 
 ---
 
@@ -69,8 +71,28 @@ npm test           # 等同 ng test
 - loading 不抽掉表格（overlay 覆蓋）、空資料提示
 
 ### 4. 新增 / 編輯 `/articles/new`、`/articles/:id/edit`
-- Reactive Form：標題（必填）、內容 Textarea（必填）、標籤（`p-selectbutton` 複選）、發佈狀態（`p-radiobutton`：draft / published）
+- Reactive Form：標題（必填、限 80 字）、內容（ngx-quill 富文本編輯器，必填）、標籤（自由輸入 + 常用標籤快選）、發佈狀態
 - 新增與編輯共用同一元件，編輯模式自動預填資料
+- **上架時間**：可指定上架時間（datepicker）——留空或過去＝立即發佈，填未來＝排程上架
+- 新增時僅能選「草稿 / 待上架」；編輯已發佈的文章時狀態鎖定不可改回未發佈
+
+---
+
+## 📌 文章狀態機
+
+狀態流：`草稿 → 待上架 → 已發佈 → 下架`。一旦發佈即不可退回未發佈狀態；「待上架」時間到會於查詢時自動升級為「已發佈」。
+
+各狀態在列表可用的操作：
+
+| 狀態 | 編輯 | 下架 | 刪除 | 說明 |
+| --- | :---: | :---: | :---: | --- |
+| **草稿** draft | ✅ | — | ✅ | 尚未發佈，可自由編輯或刪除 |
+| **待上架** scheduled | ✅ | ✅ | — | 已排程、上架時間未到；可編輯或取消下架 |
+| **已發佈** published | ✅ | ✅ | — | 已上線；可編輯內容或下架，不可刪除 |
+| **下架** archived | — | — | — | 終結狀態，不可再編輯／下架／刪除 |
+
+- 上架時間 > 現在 → 存為「待上架」；≤ 現在 → 存為「已發佈」（由 `ArticleService.resolvePublish` 判定）
+- 「待上架」的自動上線以**查詢時即時判定**實作（`promoteScheduled`），不依賴定時器
 
 ---
 
@@ -78,7 +100,7 @@ npm test           # 等同 ng test
 
 ```
 src/app/
-├── app.config.ts              # 全域 provider（Router、animations、PrimeNG Nora 主題）
+├── app.config.ts              # 全域 provider（Router、animations、PrimeNG Aura 主題）
 ├── app.routes.ts              # 路由表 + lazy loading + 守衛
 ├── app.ts                     # 根元件（僅 <router-outlet>）
 │
@@ -110,16 +132,16 @@ src/app/
 - **現代 Angular 寫法**：全面採用 standalone components（無 NgModule）、signals 管理狀態、`inject()` 取代建構子注入、`@if / @for` 新控制流。
 - **依賴注入（DI）為核心**：資料統一放在 `ArticleService`，透過 `providedIn: 'root'` 單例跨頁面共用；`authGuard` 以 `inject()` 取得 `AuthService` 判斷登入；無任何手動 `new`。
 - **伺服器端分頁思維**：`ArticleService.query()` 模擬真實後端——篩選、分頁都在 Service 完成，只回傳當頁資料 + 總筆數。查詢面板的多條件（關鍵字 / 狀態 / 日期 / 頁碼 / 每頁筆數）以 RxJS `combineLatest` 合流、`switchMap` 打 API。
-- **PrimeNG（Nora 主題）**：資料密集的後台採用 PrimeNG 元件庫（table、date-range-picker、paginator、select、drawer、dialog…），Nora 主題方正緊湊、貼近營運後台調性，主色統一為藍色。
+- **PrimeNG（Aura 主題）**：資料密集的後台採用 PrimeNG 元件庫（table、date-range-picker、paginator、select、drawer、dialog…），Aura 主題柔和圓潤、貼近現代後台調性，主色統一為藍色。
 
-## ✅ 加分項達成
+## ⚡ 效能與品質
 
-- ✅ `ChangeDetectionStrategy.OnPush`（所有元件）
-- ✅ Lazy Loading（每個功能頁獨立 chunk，`ng build` 可見）
-- ✅ loading 狀態 / 空資料提示 / 表單錯誤提示等 UX 細節
-- ⬜ 單元測試（可後續補上，`ng test` 已配置 Vitest）
+- **變更偵測**：所有元件採用 `OnPush`，搭配 signals 讓變更偵測更精準、重繪範圍最小。
+- **Lazy Loading**：每個功能頁以 `loadComponent` 切成獨立 chunk，首屏只載入必要程式碼（`ng build` 可見各頁 chunk）。
+- **UX 細節**：查詢／翻頁有 loading 遮罩、空資料有提示、表單即時錯誤訊息與送出結果 toast。
+- **測試**：以 Vitest 撰寫 45 個測試，涵蓋 Service（查詢／篩選／分頁／CRUD／統計）、路由守衛、日期區間 directive，以及 `article-list`、`article-form` 兩個核心元件。
 
-## 🧩 困難點 / 取捨
+## 🧩 實作重點與取捨
 
 - **多條件查詢的資料流**：搜尋、狀態、日期、頁碼、每頁筆數五個來源以 `combineLatest` + `switchMap` 整合，任一改變都重新查詢並自動取消前一個請求，避免競態。
 - **loading 不閃爍**：翻頁 / 查詢時保留當前表格，只在其上覆蓋半透明 overlay，而非整個抽掉重繪。
