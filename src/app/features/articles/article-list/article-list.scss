@@ -1,0 +1,197 @@
+/* 三段式佈局：查詢(固定) → 表格(flex 撐滿、內部捲動) → 分頁(釘底) */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px 28px 0;
+  min-height: 0;
+}
+
+.list-header {
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+.page-title {
+  font-size: 22px;
+  margin: 0;
+}
+
+/* 查詢面板 */
+.filter-panel {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.filter-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+.filter-field ::ng-deep .p-datepicker {
+  width: 240px;
+}
+.filter-field .keyword-input {
+  width: 200px;
+}
+.filter-field ::ng-deep .p-select {
+  width: 130px;
+}
+.filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.list-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+/* 表格區：填滿剩餘高度、內部捲動 */
+.table-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+.article-table {
+  height: 100%;
+}
+::ng-deep .article-table .p-datatable-table-container {
+  height: 100%;
+}
+
+.a-title {
+  font-weight: 600;
+}
+.a-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+/* 標籤 chip：hashtag 概念，中性灰底 */
+.tag-chip {
+  display: inline-block;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 2px 9px;
+  border-radius: 4px;
+  background: #eee;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+
+.col-index {
+  width: 56px;
+  text-align: center;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+.col-tags {
+  width: 180px;
+}
+.col-status {
+  white-space: nowrap;
+}
+.col-info {
+  width: 60px;
+  text-align: center;
+}
+.info-icon {
+  font-size: 16px;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.info-icon:hover {
+  color: var(--c-primary);
+}
+.col-actions {
+  text-align: right;
+  white-space: nowrap;
+  width: 110px;
+}
+
+/* 詳細資訊 popover 內容：icon｜欄名｜值 三欄對齊 */
+.info-pop {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 8px 10px;
+  align-items: center;
+  font-size: 13px;
+  min-width: 240px;
+}
+.info-line {
+  display: contents;
+}
+.info-line i {
+  color: var(--c-text-muted);
+}
+.info-k {
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+.info-v {
+  color: var(--c-text);
+  font-weight: 500;
+}
+.row-clickable {
+  cursor: pointer;
+}
+
+/* 空資料 */
+.state-box {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--c-text-muted);
+}
+.state-box i {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+/* loading 遮罩 */
+.table-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+/* 分頁列：釘底、無背景 */
+.pagination-bar {
+  flex-shrink: 0;
+}
+.pagination-bar.hidden {
+  display: none;
+}
+::ng-deep .pagination-bar .p-paginator {
+  background: transparent;
+  border: none;
+  justify-content: flex-end;
+}
+
+@media (max-width: 860px) {
+  :host {
+    padding: 16px 14px 0;
+  }
+}

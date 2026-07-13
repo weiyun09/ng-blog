@@ -1,0 +1,43 @@
+<div class="layout" [class.sidebar-collapsed]="!sidebarOpen()">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="brand">
+        <span class="brand-logo">📝</span>
+        <span class="brand-name">Blog Admin</span>
+      </span>
+    </div>
+
+    <div class="topbar-right">
+      <button class="user-btn" (click)="menu.toggle($event)">
+        <span class="user-avatar">{{ email().charAt(0).toUpperCase() }}</span>
+        <span class="user-email">{{ email() }}</span>
+        <i class="pi pi-angle-down"></i>
+      </button>
+      <p-menu #menu [model]="userMenu" [popup]="true" />
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.path) {
+        <a
+          class="nav-item"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.exact }"
+        >
+          <i [class]="item.icon"></i>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+    <button class="collapse-btn" (click)="toggleSidebar()" [attr.aria-label]="sidebarOpen() ? '收合選單' : '展開選單'">
+      <i class="pi" [class.pi-angle-double-left]="sidebarOpen()" [class.pi-angle-double-right]="!sidebarOpen()"></i>
+      <span class="collapse-label">收合選單</span>
+    </button>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

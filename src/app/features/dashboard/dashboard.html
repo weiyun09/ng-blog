@@ -1,0 +1,63 @@
+@let s = summary();
+
+<div class="list-header">
+  <h1 class="page-title">數據分析</h1>
+</div>
+
+<form class="filter-panel" [formGroup]="filterForm" (ngSubmit)="search()">
+  <div class="filter-field">
+    <label>統計區間</label>
+    <p-datepicker
+      formControlName="dateRange"
+      selectionMode="range"
+      [readonlyInput]="true"
+      dateFormat="yy-mm-dd"
+      placeholder="開始日期 ~ 結束日期"
+      styleClass="w-full"
+      [maxDate]="maxDate"
+      appReverseRange
+    />
+  </div>
+
+  <div class="filter-actions">
+    <p-button label="查詢" type="submit" />
+    <p-button label="重置" severity="secondary" [outlined]="true" type="button" (onClick)="reset()" />
+  </div>
+</form>
+
+<div class="kpi-grid">
+  <p-card styleClass="kpi">
+    <span class="kpi-label">文章總數</span>
+    <span class="kpi-value">{{ s.total }}</span>
+  </p-card>
+
+  <p-card styleClass="kpi">
+    <span class="kpi-label">已發布率</span>
+    <span class="kpi-value">{{ publishedPct() }}<small>%</small></span>
+    <span class="kpi-sub">{{ s.published }} / {{ s.total }} 篇</span>
+  </p-card>
+
+  <p-card styleClass="kpi">
+    <span class="kpi-label">草稿數</span>
+    <span class="kpi-value">{{ s.draft }}</span>
+  </p-card>
+
+  <p-card styleClass="kpi">
+    <span class="kpi-label">標籤種類</span>
+    <span class="kpi-value">{{ s.tags.length }}</span>
+  </p-card>
+</div>
+
+<div class="chart-grid">
+  <p-card header="發布狀態佔比" styleClass="chart-card">
+    <div class="chart-box">
+      <p-chart type="doughnut" [data]="statusData()" [options]="doughnutOptions"></p-chart>
+    </div>
+  </p-card>
+
+  <p-card header="標籤分佈" styleClass="chart-card">
+    <div class="chart-box">
+      <p-chart type="bar" [data]="tagData()" [options]="barOptions"></p-chart>
+    </div>
+  </p-card>
+</div>

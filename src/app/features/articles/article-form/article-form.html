@@ -1,0 +1,123 @@
+<div class="form-header">
+  <h1 class="page-title">{{ isEdit() ? '編輯文章' : '新增文章' }}</h1>
+</div>
+
+@if (notFound()) {
+  <p-card class="state-card">
+    <div class="state-box">
+      <i class="pi pi-exclamation-triangle state-icon"></i>
+      <p>找不到這篇文章，可能已被刪除。</p>
+      <p-button label="回列表" routerLink="/articles" />
+    </div>
+  </p-card>
+} @else {
+  <p-card class="form-card">
+    @if (loading()) {
+      <!-- 編輯載入時蓋在表單上，讓使用者先看到完整表單框架、再被資料填入 -->
+      <div class="form-loading">
+        <p-progressSpinner [style]="{ width: '36px', height: '36px' }" strokeWidth="4" />
+      </div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="form-fields">
+        <!-- 左欄：主要內容 -->
+        <div class="form-col-main">
+          <div class="field-block">
+            <label class="field-label" for="title">標題<span class="req">*</span></label>
+            <input
+              id="title"
+              type="text"
+              pInputText
+              class="full-width"
+              formControlName="title"
+              placeholder="輸入文章標題"
+              maxlength="80"
+            />
+            <div class="field-error field-error-row">
+              <span>
+                @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+                  請輸入標題
+                } @else if (form.controls.title.touched && form.controls.title.hasError('maxlength')) {
+                  標題不可超過 80 字
+                }
+              </span>
+              <span class="char-count">{{ form.controls.title.value.length }} / 80</span>
+            </div>
+          </div>
+
+          <div class="field-block field-content">
+            <label class="field-label">內容<span class="req">*</span></label>
+            <quill-editor formControlName="content" placeholder="輸入文章內容" />
+            <div class="field-error">
+              @if (form.controls.content.touched && form.controls.content.hasError('required')) {
+                請輸入內容
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- 右欄：發佈設定 -->
+        <aside class="form-col-side">
+          <div class="field-block">
+            <label class="field-label">發佈狀態</label>
+            <div class="radio-group">
+              <div class="radio-item">
+                <p-radiobutton inputId="status-draft" value="draft" formControlName="status" />
+                <label for="status-draft">草稿</label>
+              </div>
+              <div class="radio-item">
+                <p-radiobutton inputId="status-published" value="published" formControlName="status" />
+                <label for="status-published">已發佈</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-block">
+            <label class="field-label" for="tags">標籤</label>
+            <p-autocomplete
+              inputId="tags"
+              formControlName="tags"
+              [suggestions]="[]"
+              [multiple]="true"
+              [unique]="true"
+              [showClear]="false"
+              [showEmptyMessage]="false"
+              [minLength]="99"
+              placeholder="輸入標籤後按 Enter"
+              styleClass="tag-input"
+              [style]="{ width: '100%' }"
+              (keydown.enter)="onTagEnter($event)"
+            />
+            @if (allTags().length) {
+              <div class="quick-tags">
+                <span class="quick-tags-label">常用：</span>
+                @for (t of quickTags(); track t) {
+                  <button type="button" class="quick-tag" (click)="addQuickTag(t)">
+                    <i class="pi pi-plus"></i>#{{ t }}
+                  </button>
+                } @empty {
+                  <span class="quick-tags-empty">已全部加入</span>
+                }
+              </div>
+            }
+          </div>
+        </aside>
+      </div>
+
+      <div class="form-actions">
+        <p-button
+          type="button"
+          label="取消"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="cancel()"
+        />
+        <p-button
+          type="submit"
+          [label]="isEdit() ? '更新' : '建立'"
+          [loading]="submitting()"
+        />
+      </div>
+    </form>
+  </p-card>
+}

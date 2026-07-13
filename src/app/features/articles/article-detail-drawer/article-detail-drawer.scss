@@ -1,0 +1,48 @@
+.drawer-title {
+  font-size: 22px;
+  line-height: 1.4;
+  margin: 0 0 14px;
+}
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: var(--c-text-muted);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.drawer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+/* 標籤 chip 與列表 table 一致：#eee 灰底，不用 p-tag 的藍色 */
+.drawer-tags .tag-chip {
+  display: inline-block;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 2px 9px;
+  border-radius: 4px;
+  background: #eee;
+  color: var(--c-text-muted);
+}
+.drawer-content {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
+  border-top: 1px solid var(--c-border);
+  padding-top: 20px;
+}
+.drawer-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+}

@@ -1,0 +1,70 @@
+<div class="login-page">
+  <p-card class="login-card">
+    <div class="login-head">
+      <div class="logo">📝</div>
+      <h1>Blog Admin</h1>
+      <p class="subtitle">文章管理系統 · 請先登入</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="email">Email</label>
+        <p-iconfield styleClass="full-width">
+          <p-inputicon styleClass="pi pi-envelope" />
+          <input
+            id="email"
+            type="email"
+            pInputText
+            class="full-width"
+            formControlName="email"
+            placeholder="you@example.com"
+            autocomplete="username"
+          />
+        </p-iconfield>
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          @if (form.controls.email.hasError('required')) {
+            <small class="p-error">請輸入 Email</small>
+          } @else if (form.controls.email.hasError('email')) {
+            <small class="p-error">Email 格式不正確</small>
+          }
+        }
+      </div>
+
+      <div class="field">
+        <label for="password">密碼</label>
+        <p-password
+          inputId="password"
+          formControlName="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="full-width"
+          [inputStyle]="{ width: '100%' }"
+          placeholder="至少 6 碼"
+          autocomplete="current-password"
+        />
+        @if (form.controls.password.invalid && form.controls.password.touched) {
+          @if (form.controls.password.hasError('required')) {
+            <small class="p-error">請輸入密碼</small>
+          } @else if (form.controls.password.hasError('minlength')) {
+            <small class="p-error">密碼至少 6 碼</small>
+          }
+        }
+      </div>
+
+      @if (loginError()) {
+        <p class="login-error">{{ loginError() }}</p>
+      }
+
+      <p-button
+        type="submit"
+        label="登入"
+        styleClass="login-submit"
+        [loading]="submitting()"
+      />
+
+      <p class="login-hint">
+        這是模擬登入：任何合法 Email + 6 碼以上密碼即可進入。
+      </p>
+    </form>
+  </p-card>
+</div>

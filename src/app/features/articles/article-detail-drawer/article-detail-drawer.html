@@ -1,0 +1,47 @@
+<p-drawer
+  [visible]="article() !== null"
+  position="right"
+  [style]="{ width: '460px' }"
+  (visibleChange)="!$event && close.emit()"
+>
+  <ng-template #header>
+    @if (article(); as a) {
+      <p-tag
+        [value]="a.status === 'published' ? '已發佈' : '草稿'"
+        [severity]="a.status === 'published' ? 'success' : 'warn'"
+      />
+    }
+  </ng-template>
+
+  @if (article(); as a) {
+    <div class="drawer-body">
+      <h2 class="drawer-title">{{ a.title }}</h2>
+
+      <div class="meta-row">
+        <span class="meta-item"><i class="pi pi-user"></i> 建立者：{{ a.author }}</span>
+        <span class="meta-item"><i class="pi pi-clock"></i> 建立於 {{ formatDateTime(a.createdAt) }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-item"><i class="pi pi-pencil"></i> 編輯者：{{ a.editor }}</span>
+        <span class="meta-item"><i class="pi pi-clock"></i> 編輯於 {{ formatDateTime(a.updatedAt) }}</span>
+      </div>
+
+      @if (a.tags.length) {
+        <div class="drawer-tags">
+          @for (t of a.tags; track t) {
+            <span class="tag-chip">#{{ t }}</span>
+          }
+        </div>
+      }
+
+      <div class="drawer-content ql-editor-content" [innerHTML]="a.content"></div>
+    </div>
+
+    <ng-template #footer>
+      <div class="drawer-foot">
+        <p-button label="關閉" severity="secondary" [outlined]="true" (onClick)="close.emit()" />
+        <p-button label="編輯" icon="pi pi-pencil" [routerLink]="['/articles', a.id, 'edit']" />
+      </div>
+    </ng-template>
+  }
+</p-drawer>

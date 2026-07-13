@@ -1,0 +1,205 @@
+$sidebar-w: 224px;
+$sidebar-w-collapsed: 60px;
+$topbar-h: 56px;
+
+.layout {
+  min-height: 100vh;
+}
+
+/* 頂部 header */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $topbar-h;
+  z-index: 40;
+  background: #1b1f2e;
+  color: #e6e8ee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 700;
+}
+.brand-logo {
+  font-size: 20px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+}
+.user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #e6e8ee;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 13px;
+}
+.user-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* 左側 sidebar */
+.sidebar {
+  position: fixed;
+  top: $topbar-h;
+  left: 0;
+  width: $sidebar-w;
+  height: calc(100vh - #{$topbar-h});
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  z-index: 30;
+  transition: width 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 0;
+}
+/* 收合按鈕：釘在 sidebar 底部，收合後仍看得到，方便再展開 */
+.collapse-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--c-border);
+  color: var(--c-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.collapse-btn i {
+  font-size: 16px;
+  width: 18px;
+  flex-shrink: 0;
+}
+.collapse-btn:hover {
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: var(--c-text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-item i {
+  font-size: 16px;
+  width: 18px;
+  flex-shrink: 0;
+}
+/* 收合時文字用 max-width 收到 0（而非 opacity，避免隱形文字仍佔位、害 icon 無法置中），
+   配合 nowrap + overflow hidden，動畫過程被裁切不換行、不跳動 */
+.nav-label,
+.collapse-label {
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 140px;
+  opacity: 1;
+  transition: max-width 0.2s ease, opacity 0.15s ease;
+}
+.nav-item:hover {
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+.nav-item.active {
+  background: var(--c-primary-soft);
+  color: var(--c-primary);
+  border-right: 3px solid var(--c-primary);
+}
+
+/* 內容區：填滿高度、三段式交給各頁 */
+.content {
+  margin-left: $sidebar-w;
+  padding-top: $topbar-h;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.content ::ng-deep > *:not(router-outlet) {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 收合：sidebar 縮成窄軌（只剩 icon），收合鈕仍在，內容區跟著讓出空間 */
+.layout.sidebar-collapsed .sidebar {
+  width: $sidebar-w-collapsed;
+}
+.layout.sidebar-collapsed .content {
+  margin-left: $sidebar-w-collapsed;
+}
+.layout.sidebar-collapsed .collapse-btn {
+  justify-content: center;
+  gap: 0;
+  padding: 14px 0;
+}
+.layout.sidebar-collapsed .collapse-label {
+  max-width: 0;
+  opacity: 0;
+}
+.layout.sidebar-collapsed .nav-item {
+  justify-content: center;
+  gap: 0;
+  padding: 12px 0;
+}
+.layout.sidebar-collapsed .nav-label {
+  max-width: 0;
+  opacity: 0;
+}
+/* 收合時用 inset shadow 畫左側指示條，不佔盒模型寬度，icon 才能精準置中 */
+.layout.sidebar-collapsed .nav-item.active {
+  border-right: none;
+  box-shadow: inset 3px 0 0 var(--c-primary);
+}
+
+@media (max-width: 860px) {
+  .user-email {
+    display: none;
+  }
+}

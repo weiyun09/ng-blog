@@ -1,0 +1,160 @@
+<div class="list-header">
+  <h1 class="page-title">文章管理</h1>
+</div>
+
+<form class="filter-panel" [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+  <div class="filter-field">
+    <label>建立期間</label>
+    <p-datepicker
+      formControlName="dateRange"
+      selectionMode="range"
+      [readonlyInput]="true"
+      dateFormat="yy-mm-dd"
+      placeholder="開始日期 ~ 結束日期"
+      styleClass="w-full"
+      [maxDate]="maxDate"
+      appReverseRange
+    />
+  </div>
+
+  <div class="filter-field">
+    <label>文章搜尋</label>
+    <input pInputText formControlName="keyword" placeholder="搜尋文章標題" class="keyword-input" />
+  </div>
+
+  <div class="filter-field">
+    <label>狀態</label>
+    <p-select
+      formControlName="status"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+    />
+  </div>
+
+  <div class="filter-actions">
+    <p-button label="查詢" type="submit" />
+    <p-button label="重置" severity="secondary" [outlined]="true" type="button" (onClick)="resetFilter()" />
+  </div>
+</form>
+
+<div class="list-actions">
+  <p-button label="新增文章" icon="pi pi-plus" routerLink="/articles/new" />
+</div>
+
+<div class="table-wrap">
+  <p-table
+    [value]="items()"
+    [scrollable]="true"
+    scrollHeight="flex"
+    styleClass="p-datatable-sm article-table"
+    [rowHover]="true"
+  >
+    <ng-template #header>
+      <tr>
+        <th class="col-index">#</th>
+        <th>標題</th>
+        <th class="col-status">狀態</th>
+        <th class="col-tags">標籤</th>
+        <th class="col-info">詳細</th>
+        <th class="col-actions"></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-a let-i="rowIndex">
+      <tr class="row-clickable" (click)="openDetail(a)">
+        <td class="col-index">{{ i + 1 }}</td>
+        <td>
+          <span class="a-title">{{ a.title }}</span>
+        </td>
+        <td class="col-status">
+          <p-tag
+            [value]="a.status === 'published' ? '已發佈' : '草稿'"
+            [severity]="a.status === 'published' ? 'success' : 'warn'"
+          />
+        </td>
+        <td class="col-tags">
+          <span class="a-tags">
+            @for (t of a.tags; track t) {
+              <span class="tag-chip">#{{ t }}</span>
+            }
+          </span>
+        </td>
+        <td class="col-info">
+          <i
+            class="pi pi-info-circle info-icon"
+            (mouseenter)="infoRow.set(a); infoPop.show($event)"
+            (mouseleave)="infoPop.hide()"
+            (click)="$event.stopPropagation()"
+          ></i>
+        </td>
+        <td class="col-actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            severity="secondary"
+            (onClick)="editArticle(a, $event)"
+          />
+          <p-button
+            icon="pi pi-trash"
+            [text]="true"
+            severity="danger"
+            (onClick)="askDelete(a, $event)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      @if (!loading()) {
+        <tr>
+          <td colspan="6">
+            <div class="state-box">
+              <i class="pi pi-inbox"></i>
+              <p>{{ total() === 0 ? '目前沒有符合的文章' : '這一頁沒有資料' }}</p>
+            </div>
+          </td>
+        </tr>
+      }
+    </ng-template>
+  </p-table>
+
+  <!-- 共用「詳細資訊」popover：hover 各列 info icon 時顯示當列的作者/編輯者/時間 -->
+  <p-popover #infoPop [dismissable]="true">
+    @if (infoRow(); as r) {
+      <div class="info-pop">
+        <div class="info-line"><i class="pi pi-user"></i><span class="info-k">建立者</span><span class="info-v">{{ r.author }}</span></div>
+        <div class="info-line"><i class="pi pi-clock"></i><span class="info-k">建立時間</span><span class="info-v">{{ formatDateTime(r.createdAt) }}</span></div>
+        <div class="info-line"><i class="pi pi-pencil"></i><span class="info-k">編輯者</span><span class="info-v">{{ r.editor }}</span></div>
+        <div class="info-line"><i class="pi pi-clock"></i><span class="info-k">編輯時間</span><span class="info-v">{{ formatDateTime(r.updatedAt) }}</span></div>
+      </div>
+    }
+  </p-popover>
+
+  @if (loading()) {
+    <div class="table-loading">
+      <p-progressSpinner strokeWidth="4" [style]="{ width: '36px', height: '36px' }" />
+    </div>
+  }
+</div>
+
+<div class="pagination-bar" [class.hidden]="total() === 0">
+  <p-paginator
+    [first]="(page() - 1) * pageSize()"
+    [rows]="pageSize()"
+    [totalRecords]="total()"
+    [rowsPerPageOptions]="rowsPerPageOptions"
+    (onPageChange)="onPage($event)"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="共 {totalRecords} 篇"
+  />
+</div>
+
+<app-confirm-dialog
+  [open]="pendingDelete() !== null"
+  title="刪除文章"
+  [message]="'確定要刪除「' + (pendingDelete()?.title ?? '') + '」嗎？此操作無法復原。'"
+  confirmText="刪除"
+  (confirm)="confirmDelete()"
+  (cancel)="cancelDelete()"
+/>
+
+<app-article-detail-drawer [article]="detail()" (close)="closeDetail()" />

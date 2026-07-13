@@ -1,0 +1,15 @@
+<p-dialog
+  [visible]="open()"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [header]="title()"
+  [style]="{ width: '400px' }"
+  (visibleChange)="!$event && cancel.emit()"
+>
+  <p class="dialog-message">{{ message() }}</p>
+  <ng-template #footer>
+    <p-button [label]="cancelText()" severity="secondary" [outlined]="true" (onClick)="cancel.emit()" />
+    <p-button [label]="confirmText()" severity="danger" (onClick)="confirm.emit()" />
+  </ng-template>
+</p-dialog>

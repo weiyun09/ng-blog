@@ -1,0 +1,64 @@
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { CardModule } from 'primeng/card';
+import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
+import { ButtonModule } from 'primeng/button';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { AuthService } from '../../../core/services/auth.service';
+
+@Component({
+  selector: 'app-login',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    ReactiveFormsModule,
+    CardModule,
+    InputTextModule,
+    PasswordModule,
+    ButtonModule,
+    IconFieldModule,
+    InputIconModule,
+  ],
+  templateUrl: './login.html',
+  styleUrl: './login.scss',
+})
+export class Login {
+  private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  readonly loginError = signal('');
+  readonly submitting = signal(false);
+
+  readonly form = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+  });
+
+  submit(): void {
+    this.loginError.set('');
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.submitting.set(true);
+    const { email, password } = this.form.getRawValue();
+
+    // 模擬非同步登入，給一點延遲呈現 loading
+    setTimeout(() => {
+      const ok = this.auth.login(email, password);
+      this.submitting.set(false);
+
+      if (!ok) {
+        this.loginError.set('登入失敗，請確認 Email 與密碼（密碼至少 6 碼）。');
+        return;
+      }
+      const redirect = this.route.snapshot.queryParamMap.get('redirect') ?? '/articles';
+      this.router.navigateByUrl(redirect);
+    }, 500);
+  }
+}
