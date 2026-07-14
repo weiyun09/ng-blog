@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
-// loadComponent 讓每個功能頁各自 lazy load 成獨立 chunk。
+// loadComponent lazy-loads each feature page into its own chunk.
 export const routes: Routes = [
   {
     path: 'login',
@@ -9,7 +9,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
   },
   {
-    // MainLayout 是登入後的外框（側邊欄），內頁都掛在它的 children。
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/main-layout/main-layout').then((m) => m.MainLayout),

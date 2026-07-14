@@ -7,7 +7,8 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      // RouterOutlet 需要 router providers；p-toast 需要 MessageService
+      // TestBed doesn't inherit app.config.ts's global providers, so supply what App's
+      // template injects: Router for <router-outlet>, MessageService for <p-toast>.
       providers: [provideRouter([]), MessageService],
     }).compileComponents();
   });

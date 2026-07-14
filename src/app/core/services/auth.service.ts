@@ -9,13 +9,13 @@ interface AuthSession {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  // 初始值從 localStorage 還原，讓重整後不會被登出
+  // Restore initial value from localStorage so a reload doesn't log the user out
   private readonly session = signal<AuthSession | null>(this.restore());
 
   readonly isLoggedIn = computed(() => this.session() !== null);
   readonly email = computed(() => this.session()?.email ?? '');
 
-  // 假驗證：實務會打 API，作業只需模擬
+  // Fake auth: a real app would call an API; this only needs to simulate it
   login(email: string, password: string): boolean {
     if (!email || password.length < 6) return false;
 

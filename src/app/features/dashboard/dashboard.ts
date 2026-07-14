@@ -9,9 +9,9 @@ import { sortDateRange, toDateStr } from '../../shared/utils/date-range';
 import { ReverseRange } from '../../shared/directives/reverse-range';
 
 /**
- * 儀表板：以 ArticleService.summary（computed）為資料來源，
- * 呈現發布狀態佔比（甜甜圈）與標籤分佈（長條）。
- * 圖表資料同為 computed，新增/刪除文章後會自動更新。
+ * Dashboard: uses ArticleService.summary (computed) as its data source to show
+ * publish-status ratio (doughnut) and tag distribution (bar).
+ * Chart data is also computed, so it auto-updates after articles are added/removed.
  */
 @Component({
   selector: 'app-dashboard',
@@ -24,24 +24,23 @@ export class Dashboard {
   private readonly articles = inject(ArticleService);
   private readonly fb = inject(FormBuilder);
 
-  // 阻擋未來日期：上限設為今天 23:59:59，確保「今天」任何時刻產生的結束日都不會超過上限
-  // （若只用 new Date()，重置時較晚產生的結束日會比上限晚，被 PrimeNG 判為超界而消失）
+  // Block future dates: cap at today 23:59:59 so any end date generated today stays within bounds
+  // (with plain new Date(), a later-generated end date would exceed the cap and PrimeNG would drop it as out of range)
   readonly maxDate = (() => {
     const d = new Date();
     d.setHours(23, 59, 59, 999);
     return d;
   })();
 
-  // 統計區間表單（與文章管理相同：ReactiveForms + datepicker range），預設近一個月
-  // 用 fb.control 明確包住，避免陣列初始值被 FormBuilder 誤判為 [value, validator]
+  // Stats range form (same as article list: ReactiveForms + datepicker range), defaults to last month.
+  // Wrapped in fb.control so FormBuilder doesn't read the array initial value as [value, validator]
   readonly filterForm = this.fb.group({
     dateRange: this.fb.control<Date[] | null>(this.defaultRange()),
   });
 
-  // 實際套用到統計的區間，按「查詢」才更新
+  // Range actually applied to stats; only updates on "Search"
   private readonly appliedRange = signal<Date[] | null>(this.defaultRange());
 
-  // 依套用區間統計；區間或文章資料變動都會自動重算
   readonly summary = computed(() => {
     const r = this.appliedRange();
     const from = r?.[0] ? toDateStr(r[0]) : '';
@@ -53,7 +52,7 @@ export class Dashboard {
 
   search(): void {
     const sorted = sortDateRange(this.filterForm.getRawValue().dateRange);
-    // 若使用者反向點選（先晚後早），正規化後同步回輸入框，讓顯示與統計一致
+    // If picked in reverse (late then early), normalize and sync back to the input so display matches stats
     this.filterForm.setValue({ dateRange: sorted });
     this.appliedRange.set(sorted);
   }
@@ -64,7 +63,6 @@ export class Dashboard {
     this.appliedRange.set(def);
   }
 
-  // 預設統計區間：近一個月（今天往前一個月 ~ 今天）
   private defaultRange(): Date[] {
     const to = new Date();
     const from = new Date();
@@ -72,7 +70,7 @@ export class Dashboard {
     return [from, to];
   }
 
-  // 讀取主題 CSS token（Chart.js 需要具體色值，不能吃 var()）
+  // Read theme CSS tokens (Chart.js needs concrete color values, can't use var())
   private readonly rootStyle =
     typeof document !== 'undefined' ? getComputedStyle(document.documentElement) : null;
   private token(name: string, fallback: string): string {
@@ -82,10 +80,9 @@ export class Dashboard {
   private readonly textColor = this.token('--c-text', '#1e293b');
   private readonly mutedColor = this.token('--c-text-muted', '#64748b');
   private readonly gridColor = this.token('--c-border', '#e2e8f0');
-  // 標籤分類色（最多 6 種標籤，協調但可辨識）
+  // Categorical tag colors (up to 6 tags; coordinated yet distinguishable)
   private readonly palette = ['#7c3aed', '#2563eb', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
 
-  // 甜甜圈：已發布 vs 草稿
   readonly statusData = computed(() => {
     const s = this.summary();
     return {
@@ -100,7 +97,7 @@ export class Dashboard {
     };
   });
 
-  // 長條：各標籤文章數（已由 service 依數量遞減排序）
+  // Bar: article count per tag (already sorted by count descending by the service)
   readonly tagData = computed(() => {
     const tags = this.summary().tags;
     return {

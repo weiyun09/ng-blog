@@ -21,13 +21,15 @@
             autocomplete="username"
           />
         </p-iconfield>
-        @if (form.controls.email.invalid && form.controls.email.touched) {
-          @if (form.controls.email.hasError('required')) {
-            <small class="p-error">請輸入 Email</small>
-          } @else if (form.controls.email.hasError('email')) {
-            <small class="p-error">Email 格式不正確</small>
+        <small class="field-error">
+          @if (form.controls.email.invalid && form.controls.email.touched) {
+            @if (form.controls.email.hasError('required')) {
+              請輸入 Email
+            } @else if (form.controls.email.hasError('email')) {
+              Email 格式不正確
+            }
           }
-        }
+        </small>
       </div>
 
       <div class="field">
@@ -42,13 +44,15 @@
           placeholder="至少 6 碼"
           autocomplete="current-password"
         />
-        @if (form.controls.password.invalid && form.controls.password.touched) {
-          @if (form.controls.password.hasError('required')) {
-            <small class="p-error">請輸入密碼</small>
-          } @else if (form.controls.password.hasError('minlength')) {
-            <small class="p-error">密碼至少 6 碼</small>
+        <small class="field-error">
+          @if (form.controls.password.invalid && form.controls.password.touched) {
+            @if (form.controls.password.hasError('required')) {
+              請輸入密碼
+            } @else if (form.controls.password.hasError('minlength')) {
+              密碼至少 6 碼
+            }
           }
-        }
+        </small>
       </div>
 
       @if (loginError()) {

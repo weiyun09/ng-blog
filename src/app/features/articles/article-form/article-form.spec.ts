@@ -7,14 +7,14 @@ import { ArticleForm } from './article-form';
 import { ArticleService } from '../../../core/services/article.service';
 
 /**
- * 聚焦表單邏輯：驗證規則、標籤新增、送出建立、編輯預填。
- * 以可設定路由 :id 的 ActivatedRoute mock 切換新增／編輯模式；使用真實 ArticleService。
+ * Focuses on form logic: validation rules, tag adding, submit-to-create, edit prefill.
+ * A configurable-:id ActivatedRoute mock switches create/edit mode; uses the real ArticleService.
  */
 describe('ArticleForm', () => {
   let messageAdd: ReturnType<typeof vi.fn>;
   let navigateByUrl: ReturnType<typeof vi.fn>;
 
-  // paramId 為 null → 新增模式；有值 → 編輯該篇
+  // paramId null -> create mode; a value -> edit that article
   const createComponent = (paramId: string | null) => {
     messageAdd = vi.fn();
     TestBed.configureTestingModule({
@@ -57,10 +57,10 @@ describe('ArticleForm', () => {
       expect(c.form.valid).toBe(true);
     });
 
-    it('addQuickTag 加入標籤、且不重複', () => {
+    it('addTag 加入標籤、且不重複', () => {
       const c = createComponent(null);
-      c.addQuickTag('前端');
-      c.addQuickTag('前端');
+      c.addTag('前端');
+      c.addTag('前端');
       expect(c.form.controls.tags.value).toEqual(['前端']);
     });
 
@@ -84,14 +84,20 @@ describe('ArticleForm', () => {
 
   describe('編輯模式', () => {
     it('依 :id 預填既有文章資料', async () => {
-      // 先用獨立 service 實例查一筆真實文章的 id（ArticleService 為 root 單例，seed 內容一致）
+      // Create a component in create mode first to set up TestBed (the service uses inject()
+      // for AuthService and can't be newed directly), then use the root singleton service to
+      // look up a real article id (seed data is stable), reset, and build an edit-mode component with it.
+      createComponent(null);
       const first = (
-        await firstValueFrom(new ArticleService().query({ page: 1, pageSize: 1, status: 'all' }))
+        await firstValueFrom(
+          TestBed.inject(ArticleService).query({ page: 1, pageSize: 1, status: 'all' }),
+        )
       ).items[0];
+      TestBed.resetTestingModule();
 
       const c = createComponent(String(first.id));
       expect(c.isEdit()).toBe(true);
-      await settle(); // 等 getById 的 delay
+      await settle(); // wait for getById's delay
       expect(c.form.controls.title.value).toBe(first.title);
       expect(c.form.controls.status.value).toBe(first.status);
     });

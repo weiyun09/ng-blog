@@ -13,14 +13,13 @@
 } @else {
   <p-card class="form-card">
     @if (loading()) {
-      <!-- 編輯載入時蓋在表單上，讓使用者先看到完整表單框架、再被資料填入 -->
+      <!-- Overlay while an edit loads: user sees the full form skeleton first, then it fills with data -->
       <div class="form-loading">
         <p-progressSpinner [style]="{ width: '36px', height: '36px' }" strokeWidth="4" />
       </div>
     }
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="form-fields">
-        <!-- 左欄：主要內容 -->
         <div class="form-col-main">
           <div class="field-block">
             <label class="field-label" for="title">標題<span class="req">*</span></label>
@@ -56,9 +55,9 @@
           </div>
         </div>
 
-        <!-- 右欄：發佈設定 -->
         <aside class="form-col-side">
           <div class="field-block">
+            @let status = statusValue();
             <label class="field-label" for="publishAt">上架時間</label>
             <p-datepicker
               inputId="publishAt"
@@ -67,11 +66,11 @@
               hourFormat="24"
               dateFormat="yy-mm-dd"
               [showIcon]="true"
-              [placeholder]="statusValue() === 'draft' ? '草稿無需上架時間' : '留空＝立即上架'"
-              [disabled]="statusValue() === 'draft'"
+              [placeholder]="status === 'draft' ? '草稿無需上架時間' : '留空＝立即上架'"
+              [disabled]="status === 'draft'"
               styleClass="w-full"
             />
-            @if (statusValue() !== 'draft') {
+            @if (status !== 'draft') {
               <p class="status-hint">選未來時間＝排程上架；留空或過去時間＝立即發佈</p>
             }
           </div>
@@ -97,17 +96,18 @@
                 />
                 <label for="status-scheduled" [class.label-disabled]="draftLocked()">待上架</label>
               </div>
-              <!-- 已發佈/下架只在編輯這類文章時顯示，讓使用者看得到目前狀態；但全部禁用不可改 -->
+              <!-- Published/archived shown only when editing such an article so the current status is visible; all disabled, not editable -->
               @if (draftLocked()) {
+                @let orig = originalStatus();
                 <div class="radio-item">
                   <p-radiobutton
-                    [inputId]="'status-' + originalStatus()"
-                    [value]="originalStatus()"
+                    [inputId]="'status-' + orig"
+                    [value]="orig"
                     formControlName="status"
                     [disabled]="true"
                   />
-                  <label [for]="'status-' + originalStatus()" class="label-disabled">
-                    {{ STATUS_META[originalStatus()].label }}
+                  <label [for]="'status-' + orig" class="label-disabled">
+                    {{ STATUS_META[orig].label }}
                   </label>
                 </div>
               }
@@ -137,7 +137,7 @@
               <div class="quick-tags">
                 <span class="quick-tags-label">常用：</span>
                 @for (t of quickTags(); track t) {
-                  <button type="button" class="quick-tag" (click)="addQuickTag(t)">
+                  <button type="button" class="quick-tag" (click)="addTag(t)">
                     <i class="pi pi-plus"></i>#{{ t }}
                   </button>
                 } @empty {

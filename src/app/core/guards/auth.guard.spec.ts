@@ -9,7 +9,7 @@ import { AuthService } from '../services/auth.service';
 import { authGuard } from './auth.guard';
 
 describe('authGuard', () => {
-  // 以指定登入狀態與目標網址執行守衛
+  // Run the guard with a given login state and target URL
   const runGuard = (isLoggedIn: boolean, url = '/articles') => {
     TestBed.configureTestingModule({
       providers: [

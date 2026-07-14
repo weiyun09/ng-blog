@@ -4,6 +4,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { Article, STATUS_META } from '../../../core/models/article.model';
+import { formatDateTime } from '../../../shared/utils/date-range';
 
 @Component({
   selector: 'app-article-detail-drawer',
@@ -17,10 +18,5 @@ export class ArticleDetailDrawer {
   readonly close = output<void>();
 
   readonly STATUS_META = STATUS_META;
-
-  formatDateTime(iso: string): string {
-    const d = new Date(iso);
-    const p = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
-  }
+  readonly formatDateTime = formatDateTime;
 }

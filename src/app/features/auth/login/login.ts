@@ -30,6 +30,8 @@ export class Login {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
+  private readonly FAKE_LATENCY = 500;
+
   readonly loginError = signal('');
   readonly submitting = signal(false);
 
@@ -48,7 +50,7 @@ export class Login {
     this.submitting.set(true);
     const { email, password } = this.form.getRawValue();
 
-    // 模擬非同步登入，給一點延遲呈現 loading
+    // Simulate async login with a small delay to show the loading state
     setTimeout(() => {
       const ok = this.auth.login(email, password);
       this.submitting.set(false);
@@ -59,6 +61,6 @@ export class Login {
       }
       const redirect = this.route.snapshot.queryParamMap.get('redirect') ?? '/articles';
       this.router.navigateByUrl(redirect);
-    }, 500);
+    }, this.FAKE_LATENCY);
   }
 }

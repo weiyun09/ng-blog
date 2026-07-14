@@ -14,12 +14,12 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
-import { MessageService } from 'primeng/api';
 import { ArticleService } from '../../../core/services/article.service';
-import { Article, ArticleStatus, STATUS_META } from '../../../core/models/article.model';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Article, ArticleStatus, STATUS_META, canDelete, canArchive } from '../../../core/models/article.model';
 import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 import { ArticleDetailDrawer } from '../article-detail-drawer/article-detail-drawer';
-import { sortDateRange, toDateStr } from '../../../shared/utils/date-range';
+import { sortDateRange, toDateStr, formatDate, formatDateTime } from '../../../shared/utils/date-range';
 import { ReverseRange } from '../../../shared/directives/reverse-range';
 
 type StatusFilter = ArticleStatus | 'all';
@@ -57,15 +57,13 @@ export class ArticleList {
   private readonly articleService = inject(ArticleService);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
-  private readonly messageService = inject(MessageService);
+  private readonly notify = inject(NotificationService);
 
   readonly rowsPerPageOptions = [20, 30, 50, 100];
 
-  // 建立期間不允許選未來日期（文章不可能建立在未來）
+  // No future dates for the creation range (articles can't be created in the future)
   readonly maxDate = new Date();
 
-  // 狀態顯示對照，模板直接引用
-  readonly STATUS_META = STATUS_META;
 
   readonly statusOptions = [
     { label: '全部', value: 'all' },
@@ -75,8 +73,8 @@ export class ArticleList {
     { label: '下架', value: 'archived' },
   ];
 
-  // 查詢條件表單（PrimeNG datepicker range 模式綁 Date[]）
-  // dateRange 用 fb.control 明確包住，避免 Date[] 型別被 FormBuilder 誤判為 [value, validator]
+  // Filter form (PrimeNG datepicker range mode binds Date[]).
+  // dateRange wrapped in fb.control so FormBuilder doesn't read Date[] as [value, validator]
   readonly filterForm = this.fb.nonNullable.group({
     keyword: '',
     status: 'all' as StatusFilter,
@@ -123,8 +121,8 @@ export class ArticleList {
 
     toSignal(query$, { initialValue: null });
 
-    // 標題搜尋：即時輸入 + debounce（PDF 指定的 RxJS debounce）。
-    // 打字停 400ms 才查詢，避免每個字元都打一次 API；狀態/日期仍走「查詢」按鈕。
+    // Title search: live input with debounce.
+    // Query fires 400ms after typing stops to avoid one API call per keystroke; status/date still use the "Search" button.
     this.filterForm.controls.keyword.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe((keyword) => {
@@ -136,7 +134,7 @@ export class ArticleList {
   applyFilter(): void {
     const v = this.filterForm.getRawValue();
     const range = sortDateRange(v.dateRange);
-    // 反向點選時同步回輸入框，讓顯示與查詢一致
+    // When the range is picked in reverse, sync back to the input so display matches the query
     this.filterForm.patchValue({ dateRange: range });
     const from = range?.[0];
     const to = range?.[1];
@@ -168,14 +166,13 @@ export class ArticleList {
   }
 
   editArticle(article: Article, event: Event): void {
-    event.stopPropagation(); // 擋住冒泡，避免同時觸發整列的開啟詳情
+    event.stopPropagation(); // Stop bubbling so the row's open-detail isn't also triggered
     this.router.navigate(['/articles', article.id, 'edit']);
   }
 
   askDelete(article: Article, event: Event): void {
     event.stopPropagation();
-    // 僅草稿可刪除（非草稿的文章已對外，不允許直接刪）
-    if (article.status !== 'draft') return;
+    if (!canDelete(article.status)) return;
     this.pendingDelete.set(article);
   }
   cancelDelete(): void {
@@ -186,12 +183,7 @@ export class ArticleList {
     if (!target) return;
     this.articleService.remove(target.id).subscribe(() => {
       this.pendingDelete.set(null);
-      this.messageService.add({
-        severity: 'success',
-        summary: '刪除成功',
-        detail: `文章「${target.title}」已刪除`,
-        life: 3000,
-      });
+      this.notify.success('刪除成功', `文章「${target.title}」已刪除`);
       if (this.items().length === 1 && this.page() > 1) {
         this.page.set(this.page() - 1);
       } else {
@@ -202,8 +194,7 @@ export class ArticleList {
 
   askArchive(article: Article, event: Event): void {
     event.stopPropagation();
-    // 已發佈或待上架皆可下架
-    if (article.status !== 'published' && article.status !== 'scheduled') return;
+    if (!canArchive(article.status)) return;
     this.pendingArchive.set(article);
   }
   cancelArchive(): void {
@@ -214,25 +205,16 @@ export class ArticleList {
     if (!target) return;
     this.articleService.archive(target.id).subscribe(() => {
       this.pendingArchive.set(null);
-      this.messageService.add({
-        severity: 'success',
-        summary: '下架成功',
-        detail: `文章「${target.title}」已下架`,
-        life: 3000,
-      });
+      this.notify.success('下架成功', `文章「${target.title}」已下架`);
       this.refresh.update((n) => n + 1);
     });
   }
 
-  formatDate(iso: string): string {
-    const d = new Date(iso);
-    const p = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())}`;
-  }
+  readonly formatDate = formatDate;
+  readonly formatDateTime = formatDateTime;
 
-  formatDateTime(iso: string): string {
-    const d = new Date(iso);
-    const p = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  // Typed lookup so the template doesn't index STATUS_META with the untyped p-table row
+  statusMeta(status: ArticleStatus) {
+    return STATUS_META[status];
   }
 }

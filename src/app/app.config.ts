@@ -9,7 +9,7 @@ import { MessageService } from 'primeng/api';
 
 import { routes } from './app.routes';
 
-// Aura 主題 + 藍色主色（把 primary 綁到內建的 blue palette）
+// Aura theme with primary bound to the built-in blue palette
 const BlueAura = definePreset(Aura, {
   semantic: {
     primary: {
@@ -38,11 +38,10 @@ export const appConfig: ApplicationConfig = {
       theme: {
         preset: BlueAura,
         options: {
-          darkModeSelector: false, // 只用亮色模式
+          darkModeSelector: false, // light mode only
         },
       },
     }),
-    // ngx-quill 基本 toolbar：標題、粗體/斜體/底線、清單、連結、清除格式
     provideQuillConfig({
       modules: {
         toolbar: [

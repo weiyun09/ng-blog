@@ -7,7 +7,7 @@ describe('AuthService', () => {
   let service: AuthService;
 
   beforeEach(() => {
-    // 每個測試前清掉 localStorage，避免上一個案例殘留影響 restore()
+    // Clear localStorage before each test so leftover state doesn't affect restore()
     localStorage.clear();
     TestBed.configureTestingModule({});
     service = TestBed.inject(AuthService);

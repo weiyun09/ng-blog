@@ -39,7 +39,7 @@
 </form>
 
 <div class="list-actions">
-  <p-button label="新增文章" icon="pi pi-plus" routerLink="/articles/new" />
+  <p-button label="新增文章" icon="pi pi-plus" routerLink="/articles/new" size="small" />
 </div>
 
 <div class="table-wrap">
@@ -75,7 +75,8 @@
           <span class="a-title">{{ a.title }}</span>
         </td>
         <td class="col-status">
-          <p-tag [value]="STATUS_META[a.status].label" [severity]="STATUS_META[a.status].severity" />
+          @let statusTag = statusMeta(a.status);
+          <p-tag [value]="statusTag.label" [severity]="statusTag.severity" />
         </td>
         <td class="col-date">
           <div class="stack-time">

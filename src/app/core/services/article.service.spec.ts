@@ -1,17 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { ArticleService } from './article.service';
+import { AuthService } from './auth.service';
 import { ArticleQuery } from '../models/article.model';
 
 describe('ArticleService', () => {
   let service: ArticleService;
 
   beforeEach(() => {
+    // Clear localStorage so AuthService starts logged out, avoiding cross-test interference
+    localStorage.clear();
     TestBed.configureTestingModule({});
     service = TestBed.inject(ArticleService);
   });
 
-  // query() 有 delay(400) 模擬 API；zoneless 專案無法用 fakeAsync，改用真正的 await
+  // query() has a delay(400) mocking the API; fakeAsync can't be used in zoneless, so use real await
   const runQuery = (q: ArticleQuery) => firstValueFrom(service.query(q));
 
   describe('query()', () => {
@@ -73,16 +76,17 @@ describe('ArticleService', () => {
   });
 
   describe('create() / update()', () => {
-    it('create 會補上 id/author/建立與編輯時間並插到最前，total +1', async () => {
+    it('create 以「登入者 email」為建立者/編輯者，補上時間並插到最前，total +1', async () => {
+      TestBed.inject(AuthService).login('editor@example.com', '123456');
+
       const created = await firstValueFrom(
         service.create({ title: '測試新文章', content: 'x', tags: ['前端'], status: 'draft' }),
       );
       const res = await runQuery({ page: 1, pageSize: 5, status: 'all' });
       expect(res.items[0].title).toBe('測試新文章');
       expect(res.items[0].id).toBeGreaterThan(0);
-      // 新建文章：建立者與編輯者相同、建立與編輯時間相同
-      expect(created.author).toBeTruthy();
-      expect(created.editor).toBe(created.author);
+      expect(created.author).toBe('editor@example.com');
+      expect(created.editor).toBe('editor@example.com');
       expect(created.updatedAt).toBe(created.createdAt);
       expect(res.total).toBe(231);
     });
@@ -98,8 +102,8 @@ describe('ArticleService', () => {
     it('全部（空區間）：total=230，發布/草稿數皆 > 0 且不超過 total，publishedRate 一致', () => {
       const s = service.summaryOf('', '');
       expect(s.total).toBe(230);
-      // 狀態擴充為 draft/scheduled/published/archived，summary 僅計 published 與 draft，
-      // 故兩者相加不再等於 total，但各自應 > 0 且合計 ≤ total
+      // Status expanded to draft/scheduled/published/archived, but summary only counts
+      // published and draft, so their sum no longer equals total; each is > 0 and sum <= total
       expect(s.published).toBeGreaterThan(0);
       expect(s.draft).toBeGreaterThan(0);
       expect(s.published + s.draft).toBeLessThanOrEqual(s.total);
@@ -118,7 +122,7 @@ describe('ArticleService', () => {
 
     it('區間過濾：較窄區間的 total 不超過全部且大於 0', () => {
       const all = service.summaryOf('', '');
-      const narrow = service.summaryOf(all.to, all.to); // 只取最新那一天
+      const narrow = service.summaryOf(all.to, all.to); // only the most recent day
       expect(narrow.total).toBeLessThanOrEqual(all.total);
       expect(narrow.total).toBeGreaterThan(0);
     });

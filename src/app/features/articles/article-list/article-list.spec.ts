@@ -8,15 +8,15 @@ import { ArticleService } from '../../../core/services/article.service';
 import { Article } from '../../../core/models/article.model';
 
 /**
- * 聚焦元件的查詢/篩選/刪除/下架等邏輯行為（signal 狀態與 service 互動），
- * 不驗證 PrimeNG 元件的 DOM 渲染。使用真實 ArticleService（本身即 mock 資料）。
+ * Focuses on the component's query/filter/delete/archive logic (signal state and service
+ * interaction), not PrimeNG DOM rendering. Uses the real ArticleService (which is itself mock data).
  */
 describe('ArticleList', () => {
   let component: ArticleList;
   let messageAdd: ReturnType<typeof vi.fn>;
   let navigate: ReturnType<typeof vi.fn>;
 
-  // 取一筆指定狀態的文章當測試對象
+  // Grab one article of a given status as the test subject
   const anArticle = async (status: Article['status']): Promise<Article> => {
     const service = TestBed.inject(ArticleService);
     const res = await firstValueFrom(service.query({ page: 1, pageSize: 1000, status }));
@@ -35,12 +35,12 @@ describe('ArticleList', () => {
     const fixture = TestBed.createComponent(ArticleList);
     component = fixture.componentInstance;
     navigate = vi.fn().mockResolvedValue(true);
-    // 攔截導頁，避免真的觸發路由
+    // Intercept navigation to avoid actually triggering the router
     (TestBed.inject(Router) as unknown as { navigate: unknown }).navigate = navigate;
     fixture.detectChanges();
   });
 
-  // 等首次查詢的 delay(400) 完成
+  // Wait for the initial query's delay(400) to finish
   const settle = () => new Promise((r) => setTimeout(r, 500));
 
   it('初始化後會載入第一頁資料（total=230）', async () => {
@@ -64,13 +64,15 @@ describe('ArticleList', () => {
     await settle();
     component.resetFilter();
     expect(component.filterForm.getRawValue().keyword).toBe('');
-    await settle();
+    // reset triggers both an immediate query and a debounced re-query on keyword, so wait an
+    // extra round (debounce 400ms + query delay 400ms) for the final result to settle
+    await new Promise((r) => setTimeout(r, 900));
     expect(component.total()).toBe(230);
   });
 
   it('onPage：換頁會更新 page 與 pageSize', () => {
     component.onPage({ page: 2, rows: 50 });
-    expect(component.page()).toBe(3); // paginator 頁碼 0-based，元件 +1
+    expect(component.page()).toBe(3); // paginator page is 0-based, component adds 1
     expect(component.pageSize()).toBe(50);
   });
 
@@ -108,7 +110,7 @@ describe('ArticleList', () => {
     const draft = await anArticle('draft');
     component.askDelete(draft, { stopPropagation: () => {} } as unknown as Event);
     component.confirmDelete();
-    // 等 remove(400ms) 完成 + refresh 觸發的重新查詢(400ms) 兩段延遲
+    // Wait for both delays: remove (400ms) plus the refresh-triggered re-query (400ms)
     await new Promise((r) => setTimeout(r, 1200));
     expect(component.total()).toBe(before - 1);
     expect(messageAdd).toHaveBeenCalledWith(
