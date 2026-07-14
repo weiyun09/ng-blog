@@ -150,17 +150,19 @@
 
 /* Narrow screen: stack the two columns into one */
 @media (max-width: 820px) {
+  /* Drop the two-column grid for a plain vertical stack. The grid rows collapsed
+     once the editor initialized, letting both columns overlap in the same cell;
+     flex column + flex-shrink: 0 guarantees each block keeps its height and stacks. */
   .form-fields {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
   }
-  /* Once stacked, the main column must size to its content; keeping height: 100%
-     collapses it against the auto-height row and the editor overlaps the fields below. */
-  .form-col-main {
+  .form-col-main,
+  .form-col-side {
     height: auto;
-  }
-  .field-content {
-    min-height: 240px;
+    min-height: 0;
+    flex-shrink: 0;
   }
   .field-content ::ng-deep .ql-container.ql-snow {
     height: 240px;
