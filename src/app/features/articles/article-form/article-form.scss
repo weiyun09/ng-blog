@@ -150,13 +150,29 @@
 
 /* Narrow screen: stack the two columns into one */
 @media (max-width: 820px) {
-  /* Drop the two-column grid for a plain vertical stack. The grid rows collapsed
-     once the editor initialized, letting both columns overlap in the same cell;
-     flex column + flex-shrink: 0 guarantees each block keeps its height and stacks. */
+  /* On phones let the whole form flow and scroll with the page, instead of filling a
+     fixed-height card with an internal scroll and a pinned action bar (which blocked
+     the fields). The action buttons then sit at the end, after the last field. */
+  :host {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 16px 14px;
+  }
+  .form-card {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+  }
+  /* Drop the two-column grid for a plain vertical stack. The grid rows collapsed once
+     the editor initialized, letting both columns overlap in the same cell; flex column
+     + flex-shrink: 0 guarantees each block keeps its height and stacks. */
   .form-fields {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow: visible;
+    padding: 20px;
   }
   .form-col-main,
   .form-col-side {

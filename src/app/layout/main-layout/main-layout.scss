@@ -74,7 +74,7 @@ $topbar-h: 56px;
   top: $topbar-h;
   left: 0;
   width: $sidebar-w;
-  height: calc(100vh - #{$topbar-h});
+  height: calc(100dvh - #{$topbar-h});
   background: var(--c-surface);
   border-right: 1px solid var(--c-border);
   z-index: 30;
@@ -155,7 +155,7 @@ $topbar-h: 56px;
 .content {
   margin-left: $sidebar-w;
   padding-top: $topbar-h;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -203,6 +203,11 @@ $topbar-h: 56px;
 }
 
 @media (max-width: 768px) {
+  /* Let the content area scroll as a whole so tall pages (e.g. the article form)
+     flow naturally instead of relying on fixed-height internal scroll. */
+  .content {
+    overflow-y: auto;
+  }
   .sidebar {
     width: $sidebar-w-collapsed;
   }
