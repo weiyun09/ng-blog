@@ -213,6 +213,13 @@ export class ArticleList {
   readonly formatDate = formatDate;
   readonly formatDateTime = formatDateTime;
 
+  // Demo button: run a failing API call to show the error-handling toast
+  simulateError(): void {
+    this.articleService.simulateError().subscribe({
+      error: (err: Error) => this.notify.error('API 異常', err.message),
+    });
+  }
+
   // Typed lookup so the template doesn't index STATUS_META with the untyped p-table row
   statusMeta(status: ArticleStatus) {
     return STATUS_META[status];

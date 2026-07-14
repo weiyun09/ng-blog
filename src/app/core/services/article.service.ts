@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { delay, switchMap } from 'rxjs/operators';
 import { Article, ArticleDraft, ArticleQuery, ArticleStatus, Paged, ArticleSummary, TagStat, canDelete, canArchive } from '../models/article.model';
 import { AuthService } from './auth.service';
 import { createSeedArticles } from './article.seed';
@@ -212,4 +212,8 @@ export class ArticleService {
     return of(void 0).pipe(delay(this.LATENCY));
   }
 
+  // Simulate a failing API call (after the usual latency) for demonstrating error handling
+  simulateError(): Observable<never> {
+    return timer(this.LATENCY).pipe(switchMap(() => throwError(() => new Error('模擬的 API 異常'))));
+  }
 }

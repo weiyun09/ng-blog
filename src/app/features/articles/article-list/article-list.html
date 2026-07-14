@@ -1,5 +1,12 @@
 <div class="list-header">
   <h1 class="page-title">文章管理</h1>
+  <p-button
+    label="測試錯誤"
+    icon="pi pi-exclamation-triangle"
+    severity="danger"
+    size="small"
+    (onClick)="simulateError()"
+  />
 </div>
 
 <form class="filter-panel" [formGroup]="filterForm" (ngSubmit)="applyFilter()">
