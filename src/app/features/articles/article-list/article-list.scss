@@ -204,6 +204,33 @@
 }
 
 @media (max-width: 768px) {
+  /* Flow the whole list with the page (content area scrolls) instead of cramming
+     filter + table + paginator into one viewport height, which squished the table. */
+  :host {
+    height: auto;
+    overflow: visible;
+    padding-bottom: 16px;
+  }
+  /* Give the table a fixed, scrollable box instead of flex-filling the (now auto) host,
+     so it actually shows rows instead of collapsing to a sliver. */
+  .table-wrap {
+    flex: none;
+    height: 60dvh;
+    min-height: 300px;
+  }
+  /* Compact the filter panel: full-width fields, tighter spacing */
+  .filter-panel {
+    padding: 12px;
+    gap: 10px;
+  }
+  .filter-field {
+    flex: 1 1 100%;
+  }
+  .filter-field ::ng-deep .p-datepicker,
+  .filter-field .keyword-input,
+  .filter-field ::ng-deep .p-select {
+    width: 100%;
+  }
   ::ng-deep .pagination-bar .p-paginator {
     justify-content: center;
     flex-wrap: wrap;
