@@ -202,3 +202,12 @@
     padding: 16px 14px 0;
   }
 }
+
+@media (max-width: 768px) {
+  ::ng-deep .pagination-bar .p-paginator {
+    justify-content: center;
+    flex-wrap: wrap;
+    row-gap: 6px;
+    padding: 8px 4px 12px;
+  }
+}

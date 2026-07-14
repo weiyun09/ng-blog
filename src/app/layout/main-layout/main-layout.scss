@@ -201,3 +201,28 @@ $topbar-h: 56px;
     display: none;
   }
 }
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: $sidebar-w-collapsed;
+  }
+  .content {
+    margin-left: $sidebar-w-collapsed;
+  }
+  .nav-item {
+    justify-content: center;
+    gap: 0;
+    padding: 12px 0;
+  }
+  .nav-label {
+    max-width: 0;
+    opacity: 0;
+  }
+  .nav-item.active {
+    border-right: none;
+    box-shadow: inset 3px 0 0 var(--c-primary);
+  }
+  .collapse-btn {
+    display: none;
+  }
+}

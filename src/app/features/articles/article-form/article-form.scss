@@ -154,8 +154,16 @@
     grid-template-columns: 1fr;
     gap: 20px;
   }
+  /* Once stacked, the main column must size to its content; keeping height: 100%
+     collapses it against the auto-height row and the editor overlaps the fields below. */
+  .form-col-main {
+    height: auto;
+  }
   .field-content {
     min-height: 240px;
+  }
+  .field-content ::ng-deep .ql-container.ql-snow {
+    height: 240px;
   }
 }
 

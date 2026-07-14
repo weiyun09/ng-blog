@@ -89,12 +89,21 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
+
 @media (max-width: 900px) {
   .chart-grid {
     grid-template-columns: 1fr;
   }
 }
+
+.chart-grid > * {
+  min-width: 0;
+}
 .chart-box {
   position: relative;
   height: 300px;
+  min-width: 0;
+}
+::ng-deep .chart-box canvas {
+  max-width: 100%;
 }
