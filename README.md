@@ -140,6 +140,7 @@ src/app/
 - **Lazy Loading**：每個功能頁以 `loadComponent` 切成獨立 chunk，首屏只載入必要程式碼（`ng build` 可見各頁 chunk）。
 - **UX 細節**：查詢／翻頁有 loading 遮罩、空資料有提示、表單即時錯誤訊息與送出結果 toast。
 - **測試**：以 Vitest 撰寫 45 個測試，涵蓋 Service（查詢／篩選／分頁／CRUD／統計）、路由守衛、日期區間 directive，以及 `article-list`、`article-form` 兩個核心元件。
+- **禁止搜尋引擎索引**：後台系統不應被公開索引，以三層互相補強——`public/robots.txt`（`Disallow: /`）、`index.html` 的 `<meta name="robots" content="noindex, nofollow">`、以及 `vercel.json` 的 `X-Robots-Tag: noindex` 回應標頭。
 
 ## 🧩 實作重點與取捨
 
