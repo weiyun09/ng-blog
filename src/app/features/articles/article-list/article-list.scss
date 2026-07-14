@@ -1,4 +1,4 @@
-/* 三段式佈局：查詢(固定) → 表格(flex 撐滿、內部捲動) → 分頁(釘底) */
+/* Three-section layout: filter (fixed) -> table (flex fill, internal scroll) -> paginator (pinned bottom) */
 :host {
   display: flex;
   flex-direction: column;
@@ -16,7 +16,6 @@
   margin: 0;
 }
 
-/* 查詢面板 */
 .filter-panel {
   display: flex;
   align-items: flex-end;
@@ -59,7 +58,7 @@
   flex-shrink: 0;
 }
 
-/* 表格區：填滿剩餘高度、內部捲動 */
+/* Table area: fills remaining height with internal scroll */
 .table-wrap {
   position: relative;
   flex: 1;
@@ -76,14 +75,14 @@
 }
 
 .a-title {
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 15px;
 }
 .a-tags {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
 }
-/* 標籤 chip：hashtag 概念，中性灰底 */
 .tag-chip {
   display: inline-block;
   font-size: 13px;
@@ -107,11 +106,11 @@
 .col-status {
   white-space: nowrap;
 }
-/* 建立/編輯欄：上排 email、下排時間，小字堆疊 */
+/* Author/editor column: email on top, time below, stacked small text */
 .col-meta {
   white-space: nowrap;
 }
-/* 表頭也上下兩排，對應內容的「人 / 時間」兩排 */
+/* Header also stacks in two rows to match the body's person / time rows */
 .th-stack {
   display: flex;
   flex-direction: column;
@@ -139,18 +138,19 @@
   white-space: nowrap;
   font-size: 15px;
 }
-/* 上架/下架時間同欄上下兩排 */
+/* Publish/archive time stacked in two rows within one column, smaller text to match other meta info */
 .stack-time {
   display: flex;
   flex-direction: column;
   line-height: 1.5;
+  font-size: 12px;
 }
 .time-empty {
   font-size: 12px;
   color: var(--c-text-muted);
   opacity: 0.6;
 }
-/* 待上架的上架時間標成藍色（未來排程），與狀態欄的「待上架」tag 呼應 */
+/* Scheduled article's publish time shown in blue (future schedule), echoing the "scheduled" tag in the status column */
 .time-scheduled {
   color: var(--c-primary);
 }
@@ -163,7 +163,6 @@
   cursor: pointer;
 }
 
-/* 空資料 */
 .state-box {
   text-align: center;
   padding: 48px 20px;
@@ -176,7 +175,6 @@
   opacity: 0.5;
 }
 
-/* loading 遮罩 */
 .table-loading {
   position: absolute;
   inset: 0;
@@ -187,7 +185,6 @@
   z-index: 5;
 }
 
-/* 分頁列：釘底、無背景 */
 .pagination-bar {
   flex-shrink: 0;
 }

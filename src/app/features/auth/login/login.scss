@@ -33,7 +33,7 @@
 }
 
 .field {
-  margin-bottom: 18px;
+  margin-bottom: 8px;
 }
 .field label {
   display: block;
@@ -77,8 +77,11 @@
   margin: 18px 0 0;
 }
 
-.p-error {
+/* Always-present error slot so showing/hiding a message doesn't shift the layout */
+.field-error {
   display: block;
+  min-height: 18px;
+  line-height: 18px;
   color: var(--c-danger);
   font-size: 12px;
   margin-top: 4px;

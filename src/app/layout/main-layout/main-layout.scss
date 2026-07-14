@@ -6,7 +6,6 @@ $topbar-h: 56px;
   min-height: 100vh;
 }
 
-/* 頂部 header */
 .topbar {
   position: fixed;
   top: 0;
@@ -70,7 +69,6 @@ $topbar-h: 56px;
   font-size: 13px;
 }
 
-/* 左側 sidebar */
 .sidebar {
   position: fixed;
   top: $topbar-h;
@@ -89,7 +87,7 @@ $topbar-h: 56px;
   flex: 1;
   padding: 12px 0;
 }
-/* 收合按鈕：釘在 sidebar 底部，收合後仍看得到，方便再展開 */
+/* Collapse button: pinned to the sidebar bottom, still visible when collapsed for easy re-expand */
 .collapse-btn {
   display: flex;
   align-items: center;
@@ -133,8 +131,8 @@ $topbar-h: 56px;
   width: 18px;
   flex-shrink: 0;
 }
-/* 收合時文字用 max-width 收到 0（而非 opacity，避免隱形文字仍佔位、害 icon 無法置中），
-   配合 nowrap + overflow hidden，動畫過程被裁切不換行、不跳動 */
+/* When collapsed, shrink the label to max-width 0 (not opacity, since invisible text would still take space and stop the icon centering);
+   with nowrap + overflow hidden the animation clips without wrapping or jumping */
 .nav-label,
 .collapse-label {
   white-space: nowrap;
@@ -153,7 +151,7 @@ $topbar-h: 56px;
   border-right: 3px solid var(--c-primary);
 }
 
-/* 內容區：填滿高度、三段式交給各頁 */
+/* Content area: fills height; three-section layout left to each page */
 .content {
   margin-left: $sidebar-w;
   padding-top: $topbar-h;
@@ -167,7 +165,7 @@ $topbar-h: 56px;
   min-height: 0;
 }
 
-/* 收合：sidebar 縮成窄軌（只剩 icon），收合鈕仍在，內容區跟著讓出空間 */
+/* Collapsed: sidebar shrinks to a narrow rail (icons only), collapse button stays, content area yields space accordingly */
 .layout.sidebar-collapsed .sidebar {
   width: $sidebar-w-collapsed;
 }
@@ -192,7 +190,7 @@ $topbar-h: 56px;
   max-width: 0;
   opacity: 0;
 }
-/* 收合時用 inset shadow 畫左側指示條，不佔盒模型寬度，icon 才能精準置中 */
+/* When collapsed, draw the left indicator bar with an inset shadow so it takes no box width and the icon can center precisely */
 .layout.sidebar-collapsed .nav-item.active {
   border-right: none;
   box-shadow: inset 3px 0 0 var(--c-primary);

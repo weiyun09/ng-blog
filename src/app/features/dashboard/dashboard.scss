@@ -13,7 +13,7 @@
   margin: 0;
 }
 
-/* 統計區間篩選：對齊文章管理的 filter-panel */
+/* Date-range filter: aligned with the article list's filter-panel */
 .filter-panel {
   display: flex;
   align-items: flex-end;
@@ -42,7 +42,6 @@
   gap: 8px;
 }
 
-/* KPI 卡片 */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -85,7 +84,6 @@
   color: var(--c-text-muted);
 }
 
-/* 圖表區 */
 .chart-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
