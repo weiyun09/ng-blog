@@ -94,8 +94,13 @@ export class ArticleService {
     if (q.dateFrom) list = list.filter((a) => a.createdAt.slice(0, 10) >= q.dateFrom!);
     if (q.dateTo) list = list.filter((a) => a.createdAt.slice(0, 10) <= q.dateTo!);
 
-    // Sort by updatedAt descending: most recently edited (including just-created) first
-    list = [...list].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    // Base order: most recently edited first
+    const sorted = [...list].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    // Pin only the 3 most recent drafts to the front; the rest keep the base order
+    // so the first page still shows a mix of statuses.
+    const pinnedDrafts = sorted.filter((a) => a.status === 'draft').slice(0, 3);
+    const pinnedIds = new Set(pinnedDrafts.map((a) => a.id));
+    list = [...pinnedDrafts, ...sorted.filter((a) => !pinnedIds.has(a.id))];
 
     const total = list.length;
     const start = (q.page - 1) * q.pageSize;

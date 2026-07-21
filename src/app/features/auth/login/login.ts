@@ -36,7 +36,9 @@ export class Login {
   readonly submitting = signal(false);
 
   readonly form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    // Validators.email is spec-permissive (allows dotless domains like a@b); the extra
+    // pattern requires a dot in the domain so a@b won't pass.
+    email: ['', [Validators.required, Validators.email, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 

@@ -109,6 +109,12 @@
 .col-status {
   white-space: nowrap;
 }
+/* Shrink the status tag to match the table's compact type scale */
+.col-status ::ng-deep .p-tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  font-weight: 600;
+}
 /* Author/editor column: email on top, time below, stacked small text */
 .col-meta {
   white-space: nowrap;
