@@ -35,8 +35,17 @@ npm start          # 等同 ng serve
 npm run build      # 等同 ng build
 
 # 4. 執行單元測試（Vitest）
-npm test           # 等同 ng test
+npm test           # 等同 ng test（watch 模式）
+npm run test:ci    # 跑一次就結束（ng test --no-watch）
 ```
+
+### Git hook：push 前自動跑測試
+
+`npm install` 時，`prepare` 腳本會把 Git 的 `core.hooksPath` 指向專案內的 `.githooks/`，
+啟用 **pre-push hook**——每次 `git push` 前會先跑 `npm run test:ci`，測試沒過就中止 push。
+
+- 零依賴（不使用 Husky），hook 檔隨 repo 版控、clone 後自動生效。
+- 緊急情況要略過：`git push --no-verify`。
 
 ---
 
