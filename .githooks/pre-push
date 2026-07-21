@@ -1,0 +1,12 @@
+#!/bin/sh
+# Run the unit test suite before pushing; abort the push if anything fails.
+# Bypass with `git push --no-verify` when you really need to.
+
+echo "▶ Running unit tests before push (skip with --no-verify)…"
+
+if ! npm run test:ci --silent; then
+  echo "✗ Tests failed — push aborted."
+  exit 1
+fi
+
+echo "✓ Tests passed — pushing."
