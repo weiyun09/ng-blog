@@ -49,6 +49,27 @@ npm run test:ci    # 跑一次就結束（ng test --no-watch）
 
 ---
 
+## ☁️ 部署（Vercel）
+
+專案根目錄的 `vercel.json` 已設好 build 指令、輸出目錄（`dist/ng-blog-admin/browser`）、
+SPA rewrite（所有路徑導回 `index.html`）與防索引 header，因此不需在 Vercel 後台手動設定。
+
+```bash
+# 1. 安裝 Vercel CLI 並登入
+npm i -g vercel
+vercel login
+
+# 2. 預覽部署（產生獨立 URL，不影響正式站）
+vercel
+
+# 3. 正式部署
+vercel --prod
+```
+
+> 也可在 Vercel 匯入此 GitHub repo，之後每次 push 由 Vercel 自動部署。
+
+---
+
 ## 🔑 登入測試帳號
 
 模擬登入，**無真實後端**。驗證規則：
